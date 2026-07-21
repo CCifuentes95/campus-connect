@@ -11,7 +11,7 @@ import { isRole, type Role } from "../roles";
 
 export interface SessionUser {
   uid: string;
-  role: Role | null;
+  role: Role;
   email: string | null;
 }
 
@@ -42,7 +42,9 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   const exp = typeof claims?.exp === "number" ? claims.exp * 1000 : 0;
   if (exp && Date.now() > exp) return null;
 
-  const role = isRole(claims?.role) ? claims.role : null;
+  // Every signed-in IBU account is at least a student; advisors/admins carry an explicit
+  // claim set by the admin `setRole` tool. No Cloud Function is required (MVP).
+  const role: Role = isRole(claims?.role) ? claims.role : "student";
   const email = typeof claims?.email === "string" ? claims.email : null;
 
   return { uid: sub, role, email };

@@ -4,6 +4,7 @@
 
 The system SHALL authenticate users with their IBU email and password via Firebase Auth.
 The sign-in screen SHALL NOT offer any role selection — the account determines the role.
+Every authenticated IBU account is at least a `student`; there is no "not authorised" state.
 On success the user SHALL be routed to their role's home; on failure the specific error
 SHALL be surfaced without leaking whether an account exists beyond the messages defined below.
 
@@ -21,10 +22,9 @@ SHALL be surfaced without leaking whether an account exists beyond the messages 
 - **WHEN** a user submits an email that has no IBU account (e.g. a non-`@ibu.edu` address)
 - **THEN** the form shows "No account found" and no session is created
 
-#### Scenario: Account not authorised for CampusConnect
-- **WHEN** a user authenticates with a valid IBU account that has no CampusConnect role
-- **THEN** the user is signed out and shown "Access denied for this account" directing them
-  to the IT service desk
+#### Scenario: Account with no explicit role signs in as student
+- **WHEN** a user authenticates with a valid IBU account that has no role claim
+- **THEN** they are treated as a `student` and routed to the student home `/`
 
 ### Requirement: Keep me signed in
 

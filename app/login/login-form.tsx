@@ -4,14 +4,13 @@ import { useEffect, useState } from "react";
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
-  signOut,
   setPersistence,
   browserLocalPersistence,
   browserSessionPersistence,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase/client";
-import { homeForRole, isRole } from "@/lib/roles";
-import { ACCESS_DENIED, alertForAuthError, type LoginAlert } from "./auth-errors";
+import { homeForRole, isRole, type Role } from "@/lib/roles";
+import { alertForAuthError, type LoginAlert } from "./auth-errors";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
@@ -27,7 +26,8 @@ export function LoginForm() {
     return onAuthStateChanged(auth, async (user) => {
       if (!user) return;
       const { claims } = await user.getIdTokenResult();
-      if (isRole(claims.role)) window.location.assign(homeForRole(claims.role));
+      const role: Role = isRole(claims.role) ? claims.role : "student";
+      window.location.assign(homeForRole(role));
     });
   }, []);
 
@@ -42,14 +42,10 @@ export function LoginForm() {
       );
       const cred = await signInWithEmailAndPassword(auth, email, password);
       const tokenResult = await cred.user.getIdTokenResult(true);
-      const role = tokenResult.claims.role;
-
-      if (!isRole(role)) {
-        // Valid IBU account but not authorised for CampusConnect.
-        await signOut(auth);
-        setAlert(ACCESS_DENIED);
-        return;
-      }
+      // Every IBU account is at least a student; advisors/admins carry an explicit claim.
+      const role: Role = isRole(tokenResult.claims.role)
+        ? tokenResult.claims.role
+        : "student";
 
       // Set the session cookie before navigating so SSR sees the user. Use a full-page
       // navigation (not router.replace) so the destination's server request carries the

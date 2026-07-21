@@ -115,9 +115,6 @@ service cloud.firestore {
       function isStudentParty() {
         return isSignedIn() && resource.data.studentId == request.auth.uid;
       }
-      function isAdvisorParty() {
-        return isSignedIn() && resource.data.advisorId == request.auth.uid;
-      }
 
       // the booking student, the assigned advisor, or any staff may read
       allow read: if isStudentParty() || isStaff();

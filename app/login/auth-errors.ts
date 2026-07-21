@@ -3,11 +3,6 @@
 
 export type LoginAlert = { title: string; body: string };
 
-export const ACCESS_DENIED: LoginAlert = {
-  title: "Access denied for this account",
-  body: "Your IBU account isn’t authorised for CampusConnect. Contact the IT service desk to request access.",
-};
-
 export function alertForAuthError(code: string): LoginAlert {
   if (code === "auth/invalid-credential" || code === "auth/wrong-password") {
     return {

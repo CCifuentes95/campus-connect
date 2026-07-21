@@ -29,8 +29,10 @@ exercise, so favor pragmatic, shippable choices over infrastructure for its own 
 - In server components, read Firestore through **`FirebaseServerApp`** so security rules
   apply under the signed-in user's credentials.
 - **Roles come from custom claims**, not a Firestore lookup, so rules stay read-free. A
-  Cloud Function sets the default `student` claim on signup; an admin-only callable
-  promotes users. Claims refresh on the next token refresh — force with `getIdToken(true)`.
+  signed-in account with no claim is treated as **`student` by default (applied in-app)** —
+  the MVP does **not** deploy Cloud Functions. Advisors/admins carry an explicit claim set
+  by the **`setRole` Admin SDK tool** (`functions/src/scripts/setRole.ts`). Claims refresh on
+  the next token refresh — force with `getIdToken(true)`.
 - **Status transitions live in a plain `{ from: [allowed...] }` map in a server action**,
   not a state-machine library. Every transition writes an `events` doc (audit).
 - **Denormalize display names** (studentName, advisorName, actorName) onto tickets,

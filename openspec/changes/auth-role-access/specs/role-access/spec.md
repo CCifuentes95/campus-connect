@@ -15,30 +15,32 @@ doc for display, but the claim SHALL be authoritative.
 - **WHEN** the `role` field on a `users/{uid}` doc disagrees with the claim
 - **THEN** access decisions follow the claim, not the profile field
 
-### Requirement: Default role on account creation
+### Requirement: Student is the default role
 
-An `onUserCreate` Cloud Function SHALL set the `role: "student"` custom claim on every new
-account and create its `users/{uid}` profile document per `docs/data-model.md`.
+A signed-in account with no explicit role claim SHALL be treated as `student`. The MVP does
+not deploy Cloud Functions, so the default is applied in-app when reading the session (and in
+`firestore.rules`, student-level access is ownership-based, not role-based). Advisors and
+admins carry an explicit claim (see promotion below).
 
-#### Scenario: New account gets the student role
-- **WHEN** a new Firebase Auth account is created
-- **THEN** the account receives the `student` role claim and a matching `users/{uid}` profile
-  doc is created
+#### Scenario: Account with no claim is a student
+- **WHEN** the session is read for an authenticated account that has no role claim
+- **THEN** the effective role is `student` and the user reaches the student home `/`
 
 ### Requirement: Admin-only role promotion
 
-An admin-only callable `setRole` Cloud Function SHALL change a target user's role claim
-among `student`/`advisor`/`admin` and mirror it onto the profile doc. Callers without the
-`admin` role SHALL be rejected. The change SHALL take effect on the target's next token
-refresh (forced with `getIdToken(true)`).
+An admin SHALL be able to change a user's role among `student`/`advisor`/`admin` using an
+admin-only mechanism that writes the custom claim and mirrors `role` onto the profile doc.
+For the MVP this is the `setRole` Admin SDK tool run by an operator; a callable Cloud Function
+MAY replace it once Functions are deployed. The change SHALL take effect on the target's next
+token refresh (forced with `getIdToken(true)`).
 
 #### Scenario: Admin promotes a user to advisor
-- **WHEN** an admin calls `setRole` for a user with role `advisor`
+- **WHEN** an admin sets a user's role to `advisor`
 - **THEN** the user's role claim becomes `advisor` and the profile mirror is updated
 
-#### Scenario: Non-admin attempts promotion
-- **WHEN** a user without the `admin` role calls `setRole`
-- **THEN** the call is rejected and no claim is changed
+#### Scenario: Promotion is restricted to admins
+- **WHEN** the promotion mechanism is invoked by a non-admin
+- **THEN** it is rejected and no claim is changed
 
 #### Scenario: Claim refresh after promotion
 - **WHEN** a user's role has been changed and the client forces a token refresh
