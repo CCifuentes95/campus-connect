@@ -1,8 +1,8 @@
 ## 1. Firebase project & local setup
 
 - [x] 1.1 Enable Email/Password sign-in in the Firebase console (one project, per ADR-0004)
-- [ ] 1.2 Create the Vercel project, link the repo, and DISABLE Vercel's native Git auto-deploy (the Action is the deploy path)
-- [ ] 1.3 Add the GitHub repo secrets from `.github/workflows/deploy.yml` (Vercel token/org/project, `NEXT_PUBLIC_FIREBASE_*`, `FIREBASE_SERVICE_ACCOUNT`); set the real project id in `.firebaserc` + the workflow
+- [x] 1.2 Create the Vercel project, link the repo, and DISABLE Vercel's native Git auto-deploy (the Action is the deploy path)
+- [x] 1.3 Add the GitHub repo secrets from `.github/workflows/deploy.yml` (Vercel token/org/project, `NEXT_PUBLIC_FIREBASE_*`, `FIREBASE_SERVICE_ACCOUNT`); set the real project id in `.firebaserc` + the workflow
 - [x] 1.4 Add Firebase web config to `.env.local` from `.env.example` (no secrets in client code)
 - [x] 1.6 Deploy `firestore.rules` to the project; `isStaff()`/`isAdmin()` resolve from the token
 
