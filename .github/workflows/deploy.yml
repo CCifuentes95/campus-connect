@@ -45,7 +45,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
 
       - name: Install dependencies
@@ -74,7 +74,8 @@ jobs:
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
-  # ---- Cloud Functions + Firestore rules/indexes -> Firebase ----------------
+  # ---- Firestore rules + indexes -> Firebase --------------------------------
+  # MVP does not deploy Cloud Functions (no Blaze plan). Only rules/indexes ship here.
   firebase:
     runs-on: ubuntu-latest
     steps:
@@ -82,18 +83,12 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-
-      - name: Install & build functions
-        working-directory: functions
-        run: |
-          npm ci
-          npm run build
+          node-version: 22
 
       - name: Write service-account credentials
         run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "$RUNNER_TEMP/gcp-sa.json"
 
-      - name: Deploy functions + firestore rules/indexes
+      - name: Deploy Firestore rules + indexes
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/gcp-sa.json
-        run: npx --yes firebase-tools@latest deploy --only functions,firestore --project campus-connect-503020 --non-interactive
+        run: npx --yes firebase-tools@latest deploy --only firestore --project campus-connect-503020 --non-interactive
