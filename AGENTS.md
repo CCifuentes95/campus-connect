@@ -64,6 +64,11 @@ Read these before touching data or auth — do not restate them, follow them:
 Collections: `users` (+ `notifications`, `fcmTokens` subcollections), `tickets`
 (+ `events` audit subcollection), `appointments`.
 
+## Before Any Task
+
+**Context Checklist:**
+- [ ] Read relevant specs in `specs/[capability]/spec.md`
+
 ## Build order
 
 Build the student spine first — it's a working vertical slice — then layer the rest:

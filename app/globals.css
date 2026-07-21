@@ -11,6 +11,21 @@
   --font-sans: var(--font-poppins);
 }
 
+/* IBU brand tokens (docs/design-brief.md) — use `bg-navy`, `text-gold`, etc. */
+@theme {
+  --color-navy: #0d2c49;
+  --color-navy-muted: #b6c6d5;
+  --color-gold: #d7a524;
+  --color-gold-hover: #e6b52f;
+  --color-teal: #064948;
+  --color-body: #4a5b6b;
+  --color-muted: #7d8b99;
+  --color-field: #b6c6d5;
+  --color-surface: #f6f8fa;
+  --color-alert-bg: #fdf0ee;
+  --color-alert-border: #f0c4bd;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
