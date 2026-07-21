@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Cloud Functions have their own package + toolchain; don't lint their build output.
+    "functions/**",
   ]),
 ]);
 

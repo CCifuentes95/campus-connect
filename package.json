@@ -6,9 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "emulators": "firebase emulators:start --only auth,firestore --project campus-connect-503020",
+    "seed": "npm --prefix functions run build && FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 FIRESTORE_EMULATOR_HOST=localhost:8080 FIREBASE_PROJECT_ID=campus-connect-503020 node functions/lib/scripts/seed.js"
   },
   "dependencies": {
+    "firebase": "^12.16.0",
     "next": "16.2.11",
     "react": "19.2.4",
     "react-dom": "19.2.4"
