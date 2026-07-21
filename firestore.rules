@@ -1,0 +1,144 @@
+rules_version = '2';
+
+// CampusConnect Firestore security rules.
+// Access control is driven by the `role` custom claim (student | advisor | admin),
+// read from the ID token — NO document reads in rules (see docs/data-model.md).
+// Any data-model change must be paired with a change here.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---- helpers ----
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function role() {
+      return request.auth.token.role;
+    }
+    function isStaff() {
+      // advisor and admin are one working tier (see ADR-0001)
+      return isSignedIn() && (role() == 'advisor' || role() == 'admin');
+    }
+    function isAdmin() {
+      return isSignedIn() && role() == 'admin';
+    }
+    function isSelf(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+    // fields present in the incoming write but NOT allowed to change
+    function unchanged(field) {
+      return request.resource.data[field] == resource.data[field];
+    }
+
+    // ---- users ----
+    match /users/{uid} {
+      // a user reads their own profile; staff read anyone (for names/queues)
+      allow read: if isSelf(uid) || isStaff();
+
+      // profiles are created by the onUserCreate Cloud Function (admin SDK bypasses
+      // rules), so no client create. A user may edit their own display/pref fields
+      // but never their own role (role is a claim, mirror is display-only).
+      allow update: if isSelf(uid)
+                    && unchanged('role')
+                    && unchanged('uid')
+                    && unchanged('email');
+      allow create, delete: if false;
+
+      // notifications feed — owner reads and marks read; writes come from functions
+      match /notifications/{notificationId} {
+        allow read: if isSelf(uid);
+        // owner may only flip `read`; everything else is function-written
+        allow update: if isSelf(uid)
+                      && request.resource.data.diff(resource.data).affectedKeys()
+                           .hasOnly(['read']);
+        allow create, delete: if false;
+      }
+
+      // FCM device tokens — owner manages their own
+      match /fcmTokens/{token} {
+        allow read, create, delete: if isSelf(uid);
+        allow update: if isSelf(uid);
+      }
+    }
+
+    // ---- tickets ----
+    match /tickets/{ticketId} {
+      function isOwner() {
+        return isSignedIn() && resource.data.studentId == request.auth.uid;
+      }
+
+      // student sees their own tickets; staff see all
+      allow read: if isOwner() || isStaff();
+
+      // a student creates their own ticket, always in status "new" and unassigned
+      allow create: if isSignedIn()
+                    && request.resource.data.studentId == request.auth.uid
+                    && request.resource.data.status == 'new'
+                    && request.resource.data.assigneeId == null;
+
+      // Updates: staff may transition/assign freely (the server action enforces the
+      // valid { from: [...] } transition map — rules keep coarse guardrails only).
+      // The student who owns the ticket may reply, which the action moves
+      // waiting_for_student -> assigned; students may never set assignee or jump to
+      // resolved/closed directly.
+      allow update: if isStaff()
+                    || (isOwner()
+                        && unchanged('studentId')
+                        && unchanged('assigneeId')
+                        && request.resource.data.status in ['assigned', 'waiting_for_student']);
+
+      allow delete: if isAdmin();
+
+      // events: append-only audit + conversation
+      match /events/{eventId} {
+        function ticketOwner() {
+          return get(/databases/$(database)/documents/tickets/$(ticketId)).data.studentId
+                 == request.auth.uid;
+        }
+        // reads: staff see all; the owning student sees PUBLIC events only
+        // (internal notes are staff-only — see docs/data-model.md)
+        allow read: if isStaff()
+                    || (isSignedIn() && ticketOwner() && resource.data.visibility == 'public');
+        // creates: staff, or the owning student (their replies); actorId must be self.
+        // A student may only author public events, never internal notes.
+        allow create: if request.resource.data.actorId == request.auth.uid
+                      && (isStaff()
+                          || (isSignedIn() && ticketOwner()
+                              && request.resource.data.visibility == 'public'
+                              && request.resource.data.type == 'student_reply'));
+        allow update, delete: if false; // audit log is immutable
+      }
+    }
+
+    // ---- appointments ----
+    match /appointments/{appointmentId} {
+      function isStudentParty() {
+        return isSignedIn() && resource.data.studentId == request.auth.uid;
+      }
+      function isAdvisorParty() {
+        return isSignedIn() && resource.data.advisorId == request.auth.uid;
+      }
+
+      // the booking student, the assigned advisor, or any staff may read
+      allow read: if isStudentParty() || isStaff();
+
+      // student books their own appointment
+      allow create: if isSignedIn()
+                    && request.resource.data.studentId == request.auth.uid
+                    && request.resource.data.status == 'booked';
+
+      // student may cancel their own; staff may update (reschedule/complete/cancel)
+      allow update: if isStaff()
+                    || (isStudentParty()
+                        && unchanged('studentId')
+                        && unchanged('advisorId'));
+
+      allow delete: if isAdmin();
+    }
+
+    // deny everything not explicitly matched above
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,70 @@
+schema: spec-driven
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+context: |
+  CampusConnect — student support portal MVP for International Business University (IBU).
+  Students request academic support, book advising appointments, track request status,
+  and get reminders; staff triage and work requests; admins see reporting. Academic
+  exercise: favor pragmatic, shippable choices over infrastructure for its own sake.
+
+  Stack:
+  - Next.js (App Router, TypeScript) hosted on Vercel (SSR). See ADR-0004.
+  - Firebase Auth; role via custom claims (student / advisor / admin).
+  - Firestore (no SQL). Cloud Functions for privileged logic. FCM for push.
+  - Backend is all Firebase; only the web app is on Vercel. Admin SDK stays in Cloud
+    Functions, never on Vercel. Deploy: one GitHub Actions workflow ships the web app to
+    Vercel and functions + firestore rules/indexes to Firebase; Firebase web config injected
+    at build from GitHub Secrets. One Firebase project for the MVP.
+
+  Architecture principles:
+  - Server actions over route handlers for mutations; validate input with zod at the boundary.
+  - Server components read Firestore via FirebaseServerApp so security rules apply under
+    the signed-in user's credentials.
+  - Roles come from custom claims, not a Firestore lookup, so rules stay read-free.
+  - Status transitions live in a plain { from: [allowed...] } map in a server action, not a
+    state-machine library. Every transition writes an events audit doc.
+  - Denormalize display names (studentName, advisorName, actorName) onto tickets,
+    appointments, and events — Firestore has no joins.
+  - Keep it flat and simple; don't add a service/library until a real read or rule needs it.
+
+  Roles (flat): advisor and staff are one working tier (an advisor is staff who also owns
+  advising appointments); any staff can triage/claim/reassign/unassign. admin is a superset
+  (staff screens + reporting + role management). firestore.rules isStaff() = advisor or admin.
+
+  Ticket status workflow: new -> assigned -> waiting_for_student -> resolved -> closed.
+  Status is never set directly — it's the result of a named action (Claim & triage, Request
+  info, Mark resolved, Close), each capturing required input. waiting_for_student -> assigned
+  when the student replies; resolved -> assigned to reopen. resolved = staff-done-pending-
+  confirmation (reopenable); closed = terminal. Resolved auto-closes after N days via a
+  scheduled Cloud Function.
+
+  Collections: users (+ notifications, fcmTokens subcollections), tickets (+ events audit
+  subcollection), appointments.
+
+  Sources of truth — read, follow, don't restate:
+  - docs/data-model.md — collections, fields, denormalization, indexes, roles/claims setup.
+  - docs/design-brief.md — screen-by-screen UI spec and IBU brand.
+  - firestore.rules — access control; any data-model change must be paired with a rules change.
+
+  Build order (student spine first): US-01 auth + role-based access; US-02 student dashboard;
+  US-03 submit support request; US-05 track ticket status; US-04 book advising appointment;
+  US-06 notifications + preferences; US-07 advisor/staff triage board; US-08 admin reporting.
+
+  Brand: navy #0d2c49 (primary), gold #d7a524 (accent — never small text on white, fails
+  contrast), teal #064948 (secondary), white bg, #b6c6d5 muted. Type: geometric sans
+  (Poppins/Montserrat stand-in for licensed Visby CF).
+
+  Conventions: TypeScript strict; no secrets in client code (Firebase web config via env
+  only); record real decisions as ADRs in docs/adr/ (Context -> Decision -> Consequences ->
+  Alternatives); reporting KPIs may be precomputed/seeded for the MVP (Firestore has no GROUP BY).
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
