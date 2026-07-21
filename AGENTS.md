@@ -19,9 +19,10 @@ exercise, so favor pragmatic, shippable choices over infrastructure for its own 
 - **Cloud Functions** for privileged/back-end logic; **FCM** for push notifications.
 - The **backend** is all Firebase; only the **web app** is hosted on Vercel (Next's native
   platform). The Admin SDK stays in Cloud Functions — never on Vercel (ADR-0004).
-- **Deploy:** one GitHub Actions workflow (`.github/workflows/deploy.yml`) ships the web app
-  to Vercel (Vercel CLI) and `functions` + `firestore` rules/indexes to Firebase. Firebase web
-  config is injected at build time from GitHub Secrets. One Firebase project for the MVP.
+- **Deploy:** a GitHub Actions workflow (`.github/workflows/deploy.yml`) ships the **web app
+  to Vercel** on push to `main` (Firebase web config injected from GitHub Secrets). Firestore
+  rules deploy **manually** (`firebase deploy --only firestore`); Cloud Functions are **not
+  deployed** in the MVP. One Firebase project. See "Implementation notes & gotchas" below.
 
 ## Architecture principles
 
@@ -108,3 +109,54 @@ Build the student spine first — it's a working vertical slice — then layer t
   Alternatives). Open ones worth writing: flat vs two-tier roles, resolved-vs-closed +
   auto-close, all-Firebase over Postgres.
 - Reporting KPIs may be precomputed/seeded for the MVP — Firestore has no `GROUP BY`.
+
+## Implementation notes & gotchas (learned — read before touching auth/deploy)
+
+**Next.js 16 divergences (this is NOT the Next.js you know):**
+- `middleware` was renamed to **`proxy`** — the request guard is `proxy.ts` at the repo root
+  (Node runtime by default; you **cannot** set `runtime` inside it). It's optimistic only
+  (redirect by cookie presence); real authorization is `firestore.rules` + the route-group layouts.
+- `cookies()`, `headers()`, `params`, `searchParams` are **async — you must `await` them**.
+- Role gating uses route groups `app/(student|staff|admin)/` with per-group `layout.tsx` that
+  read the session and redirect on wrong role.
+- Keep the client boundary at the **leaves**: `app/login/page.tsx` is a server component
+  (metadata + static brand panel) and only `login-form.tsx` is `"use client"`, so `/login`
+  prerenders static. Split pages this way.
+
+**Firebase auth on Vercel (SSR):**
+- Server components read Firestore via **`FirebaseServerApp`** (`lib/firebase/server.ts`),
+  seeded from an httpOnly `__session` cookie. The client posts its ID token to
+  `app/api/session/route.ts`; `components/auth/auth-provider.tsx` keeps it fresh via
+  `onIdTokenChanged`. The **Admin SDK is never used on Vercel** (ADR-0004).
+- **CRITICAL cookie-race:** after setting/clearing the session cookie, navigate with
+  **`window.location.assign` (full navigation), NOT `router.replace`**. A soft client nav
+  does not carry the just-set httpOnly cookie into the RSC request, so every role bounces
+  back to `/login`. (Matches Firebase's own Next.js sample.)
+
+**Roles / claims:**
+- Custom claims are settable **only via the Admin SDK** — use `functions/src/scripts/setRole.ts`
+  (`node functions/lib/scripts/setRole.js <email> <role>` with `GOOGLE_APPLICATION_CREDENTIALS`).
+- A signed-in account with **no claim defaults to `student` in-app** (`lib/firebase/session.ts`,
+  `login-form.tsx`) — there is no "access denied". This is safe because student access in
+  `firestore.rules` is **ownership-based** (`studentId == uid`), not role-based.
+
+**CI / deploy traps:**
+- pnpm in GitHub Actions needs `"packageManager": "pnpm@…"` in `package.json`.
+- The root `tsconfig.json` must **exclude `functions/`** (it has its own toolchain) or the web
+  job's `tsc` fails on `firebase-admin` imports.
+- CI is **web-only** (deploys to Vercel). Deploy Firestore rules **manually**
+  (`firebase deploy --only firestore`) — Functions need the Blaze plan, and a CI `firestore`
+  deploy 403s (`serviceusage`) because the `firebase-adminsdk` service account lacks that IAM.
+- The Firebase **web `apiKey` is public** (safe in the client bundle / repo) — not a secret.
+  **`service-account.json` IS a secret** — it's gitignored; never commit it.
+- Vercel deploy via CLI needs GitHub secrets `VERCEL_TOKEN` / `VERCEL_ORG_ID` /
+  `VERCEL_PROJECT_ID` (the `ORG_ID` is the project's `accountId`, readable from the Vercel API).
+  Disable Vercel's native Git auto-deploy so the Action is the only deploy path.
+
+**Testing:**
+- If the Chrome extension isn't connected, drive the real app with **headless Playwright**.
+- The Identity Toolkit REST endpoint `accounts:signInWithPassword?key=<webApiKey>` tests auth
+  credentials directly (fast sanity check without a browser).
+
+**Docs:** these learnings are mirrored to the Obsidian `campus-connect` vault (`Reference/`
+notes) for the durable knowledge base.
