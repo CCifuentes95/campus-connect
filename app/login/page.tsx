@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -16,7 +15,6 @@ import { homeForRole, isRole } from "@/lib/roles";
 type Alert = { title: string; body: string };
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [keepSignedIn, setKeepSignedIn] = useState(true);
@@ -25,13 +23,14 @@ export default function LoginPage() {
   const [alert, setAlert] = useState<Alert | null>(null);
 
   // Already signed in? Send them to their role home instead of showing the form.
+  // Full navigation (not router.replace) so the server request carries the session cookie.
   useEffect(() => {
     return onAuthStateChanged(auth, async (user) => {
       if (!user) return;
       const { claims } = await user.getIdTokenResult();
-      if (isRole(claims.role)) router.replace(homeForRole(claims.role));
+      if (isRole(claims.role)) window.location.assign(homeForRole(claims.role));
     });
-  }, [router]);
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -56,13 +55,15 @@ export default function LoginPage() {
         return;
       }
 
-      // Set the session cookie before navigating so SSR sees the user.
+      // Set the session cookie before navigating so SSR sees the user. Use a full-page
+      // navigation (not router.replace) so the destination's server request carries the
+      // just-set httpOnly cookie — a soft navigation races the cookie and bounces to /login.
       await fetch("/api/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken: tokenResult.token }),
       });
-      router.replace(homeForRole(role));
+      window.location.assign(homeForRole(role));
     } catch (err) {
       const code = (err as { code?: string })?.code ?? "";
       if (

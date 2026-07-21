@@ -1,6 +1,6 @@
 ## 1. Firebase project & local setup
 
-- [ ] 1.1 Enable Email/Password sign-in in the Firebase console (one project, per ADR-0004)
+- [x] 1.1 Enable Email/Password sign-in in the Firebase console (one project, per ADR-0004)
 - [ ] 1.2 Create the Vercel project, link the repo, and DISABLE Vercel's native Git auto-deploy (the Action is the deploy path)
 - [ ] 1.3 Add the GitHub repo secrets from `.github/workflows/deploy.yml` (Vercel token/org/project, `NEXT_PUBLIC_FIREBASE_*`, `FIREBASE_SERVICE_ACCOUNT`); set the real project id in `.firebaserc` + the workflow
 - [x] 1.4 Add Firebase web config to `.env.local` from `.env.example` (no secrets in client code)
@@ -40,5 +40,5 @@
 
 - [ ] 6.1 Emulator end-to-end: new signup defaults to student; admin promotes to advisor/admin; token refresh reflects the new role
 - [ ] 6.2 Verify a server component reads Firestore via `FirebaseServerApp` under the user and is subject to `firestore.rules`
-- [ ] 6.3 Verify route gating: student blocked from staff/admin routes; advisor allowed on staff but not admin routes
-- [ ] 6.4 Run `openspec validate --change auth-role-access` and confirm the change is apply-ready
+- [x] 6.3 Verify route gating: student blocked from staff/admin routes; advisor allowed on staff but not admin routes
+- [x] 6.4 Run `openspec validate --change auth-role-access` and confirm the change is apply-ready

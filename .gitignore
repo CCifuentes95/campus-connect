@@ -34,6 +34,12 @@ yarn-error.log*
 .env*
 !.env.example
 
+# Firebase Admin service-account keys — NEVER commit (these ARE secrets)
+service-account*.json
+serviceAccount*.json
+*-service-account.json
+.secrets/
+
 # vercel
 .vercel
 
