@@ -15,11 +15,12 @@ one place, with the Firebase web config injected at build time from GitHub Secre
 
 - **Host the Next.js app on Vercel.** The backend stays 100% Firebase. Only the hosting of
   the web tier moves off Firebase App Hosting.
-- **One GitHub Actions workflow deploys everything** on push to `main`
-  (`.github/workflows/deploy.yml`):
-  - **Web:** build with the Firebase web config injected from GitHub Secrets, then
-    `vercel build` + `vercel deploy --prebuilt --prod` (Vercel CLI, `VERCEL_TOKEN`).
-  - **Backend:** `firebase deploy --only functions,firestore` using a `FIREBASE_SERVICE_ACCOUNT`.
+- **A GitHub Actions workflow deploys the web app** on push to `main`
+  (`.github/workflows/deploy.yml`): build with the Firebase web config injected from GitHub
+  Secrets, then `vercel build` + `vercel deploy --prebuilt --prod` (Vercel CLI, `VERCEL_TOKEN`).
+  - **Backend deploys are manual for this academic MVP:** `firebase deploy --only firestore`
+    for rules/indexes when they change; Cloud Functions are not deployed (no Blaze plan). CI
+    stayed web-only to avoid granting a deployer service account broad IAM.
 - **Inject `NEXT_PUBLIC_FIREBASE_*` at build time.** These are embedded into the client
   bundle by `next build`, so they must be present wherever the build runs — the Action
   exports them from GitHub Secrets. They are not secret, but live there so the build has them.

@@ -1,17 +1,16 @@
-# CampusConnect deploy — one workflow, two surfaces (ADR-0004).
-#   web:      Next.js app  -> Vercel (Vercel CLI, prebuilt)
-#   backend:  functions + firestore rules/indexes -> Firebase
+# CampusConnect deploy — build & deploy the Next.js app to Vercel on push to main.
+#
+# Academic MVP: only the web app is deployed here. Firestore rules are deployed manually
+# (`firebase deploy --only firestore`) when they change — not in CI (ADR-0004).
 #
 # NOTE: Next 16 + Vercel CLI specifics diverge from older conventions (see AGENTS.md).
-# Verify the exact build invocation against current Vercel/Next docs before relying on this.
 #
 # Required GitHub repo secrets:
 #   VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID
 #   NEXT_PUBLIC_FIREBASE_API_KEY, NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
 #   NEXT_PUBLIC_FIREBASE_PROJECT_ID, NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
 #   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID, NEXT_PUBLIC_FIREBASE_APP_ID
-#   FIREBASE_SERVICE_ACCOUNT  (JSON key for a deployer service account)
-# Also set the Firebase project id below (TODO) and disable Vercel's native Git auto-deploy.
+# Disable Vercel's native Git auto-deploy so this workflow is the only deploy path.
 
 name: deploy
 
@@ -73,22 +72,3 @@ jobs:
         run: vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-
-  # ---- Firestore rules + indexes -> Firebase --------------------------------
-  # MVP does not deploy Cloud Functions (no Blaze plan). Only rules/indexes ship here.
-  firebase:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Write service-account credentials
-        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "$RUNNER_TEMP/gcp-sa.json"
-
-      - name: Deploy Firestore rules + indexes
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/gcp-sa.json
-        run: npx --yes firebase-tools@latest deploy --only firestore --project campus-connect-503020 --non-interactive
