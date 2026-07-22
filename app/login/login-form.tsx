@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -19,6 +19,12 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [alert, setAlert] = useState<LoginAlert | null>(null);
+  const alertRef = useRef<HTMLDivElement>(null);
+
+  // On a failed submit, move focus to the error so keyboard/screen-reader users hear it (WIG).
+  useEffect(() => {
+    if (alert) alertRef.current?.focus();
+  }, [alert]);
 
   // Already signed in? Send them to their role home instead of showing the form.
   // Full navigation (not router.replace) so the server request carries the session cookie.
@@ -72,8 +78,10 @@ export function LoginForm() {
 
       {alert ? (
         <div
+          ref={alertRef}
           role="alert"
-          className="mb-5 rounded-xl border border-alert-border bg-alert-bg p-3.5"
+          tabIndex={-1}
+          className="mb-5 rounded-xl border border-alert-border bg-alert-bg p-3.5 outline-none"
         >
           <div className="text-[14px] font-semibold text-alert-ink">{alert.title}</div>
           <div className="mt-0.5 text-[13px] leading-snug text-alert-ink">{alert.body}</div>

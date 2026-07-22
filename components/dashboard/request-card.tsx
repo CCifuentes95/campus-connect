@@ -6,6 +6,7 @@ import { categoryLabel, priorityStyle, studentStatusLabel } from "@/lib/labels";
 // Small status glyph, keyed on the canonical status (matches the design mockup).
 function StatusIcon({ status }: { status: string }) {
   const c = {
+    "aria-hidden": true,
     width: 13,
     height: 13,
     viewBox: "0 0 24 24",
@@ -35,7 +36,7 @@ function StatusIcon({ status }: { status: string }) {
         <circle cx="12" cy="7" r="4" />
       </svg>
     );
-  return <span className="inline-block h-[7px] w-[7px] rounded-full bg-current" />;
+  return <span aria-hidden="true" className="inline-block h-[7px] w-[7px] rounded-full bg-current" />;
 }
 
 // A support-request card (dashboard Lane A + reused by the Requests list in US-05). The card
@@ -54,6 +55,7 @@ export function RequestCard({ ticket }: { ticket: DashboardTicket }) {
           style={{ color: priority.colorVar }}
         >
           <span
+            aria-hidden="true"
             className="h-2 w-2 rounded-full"
             style={{ background: priority.colorVar }}
           />
@@ -65,24 +67,25 @@ export function RequestCard({ ticket }: { ticket: DashboardTicket }) {
         </span>
       </div>
 
-      <div className="px-5 pb-[18px] pt-4">
-        <h3 className="text-[16px] font-semibold leading-[1.35] text-ink">
+      <div className="min-w-0 px-5 pb-[18px] pt-4">
+        <h3 className="line-clamp-2 text-[16px] font-semibold leading-[1.35] text-ink">
           {ticket.title || "Untitled request"}
         </h3>
         <div className="mt-3 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <span className="rounded-md bg-teal-tint px-[9px] py-[3px] text-[11px] font-semibold tracking-[0.2px] text-teal">
               {categoryLabel(ticket.category)}
             </span>
-            <span className="text-[12px] text-muted">
-              {ticket.code ? `#${ticket.code}` : "—"} · Updated {relativeTime(ticket.updatedAtMs)}
+            <span className="truncate text-[12px] text-muted">
+              <span translate="no">{ticket.code ? `#${ticket.code}` : "—"}</span> · Updated{" "}
+              {relativeTime(ticket.updatedAtMs)}
             </span>
           </div>
           <Link
             href={`/requests/${ticket.id}`}
             className="whitespace-nowrap text-[13px] font-semibold text-ink hover:text-teal"
           >
-            Open →
+            Open <span aria-hidden="true">→</span>
           </Link>
         </div>
       </div>

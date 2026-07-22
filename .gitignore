@@ -49,3 +49,7 @@ next-env.d.ts
 
 # CodeGraph local index (per-machine, do not commit)
 .codegraph/
+
+# Installed agent skills (reproduced from skills-lock.json via `npx skills`)
+.agents/
+.claude/skills/

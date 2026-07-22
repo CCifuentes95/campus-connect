@@ -71,7 +71,9 @@ export default async function StudentDashboardPage() {
         <div className="mb-2 text-[12px] font-semibold uppercase tracking-[1.5px] text-gold-ink">
           {heroKicker}
         </div>
-        <h1 className="mb-2 text-[30px] font-bold leading-[1.2] text-ink">{heroTitle}</h1>
+        <h1 className="mb-2 text-balance text-[30px] font-bold leading-[1.2] text-ink">
+          {heroTitle}
+        </h1>
         <p className="max-w-[640px] text-[15px] leading-[1.6] text-body">{heroSubtitle}</p>
       </header>
 
@@ -98,7 +100,7 @@ export default async function StudentDashboardPage() {
                 href="/requests"
                 className="mt-[2px] self-start text-[13px] font-semibold text-teal hover:text-ink"
               >
-                View all requests →
+                View all requests <span aria-hidden="true">→</span>
               </Link>
             </div>
           )}
@@ -126,7 +128,7 @@ export default async function StudentDashboardPage() {
                 href="/appointments/new"
                 className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-dash bg-card p-[13px] text-[14px] font-semibold text-teal hover:border-[color:var(--teal)] hover:bg-[color:var(--dash-hover)]"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="12" y1="5" x2="12" y2="19" />
                   <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>

@@ -24,7 +24,9 @@ export default async function StudentLayout({
         displayName={profile?.displayName ?? profile?.email ?? user.email}
         initials={profile?.initials ?? undefined}
       />
-      <main className="flex-1">{children}</main>
+      <main id="main" tabIndex={-1} className="flex-1 scroll-mt-4 outline-none">
+        {children}
+      </main>
     </>
   );
 }

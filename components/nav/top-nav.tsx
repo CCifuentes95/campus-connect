@@ -65,7 +65,7 @@ export function TopNav({
             IB
           </div>
           <div className="leading-tight">
-            <div className="text-[16px] font-bold">CampusConnect</div>
+            <div className="text-[16px] font-bold" translate="no">CampusConnect</div>
             <div className="text-[11px] font-medium text-nav-muted">{subtitle}</div>
           </div>
         </div>

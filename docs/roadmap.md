@@ -88,6 +88,9 @@ Two-lane dashboard (requests + appointments) with per-lane empty states, rule-sc
 ---
 
 ## Cross-cutting (fold in as we go)
+- **UI definition-of-done:** every screen must match its `claude-design` mockup, apply the
+  `frontend-design` + `next-best-practices` skills, and pass a `web-design-guidelines` review in
+  both themes before it's done (see `ui-quality-baseline` + AGENTS.md).
 - **Design tokens:** roll `bg-navy`/`text-gold`/… (added in US-01) out to the nav + shared
   components; retire raw hex.
 - **Dark theme:** design-brief ships full light+dark; the app is light-only so far.
