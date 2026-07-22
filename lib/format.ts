@@ -35,12 +35,15 @@ export function dateTile(ms: number): DateTile {
   };
 }
 
-/** "9:30 AM" for an appointment start. */
+/** "9:30 AM" for an appointment time. Deterministic (not locale-dependent) so server- and
+ * client-rendered times agree — avoids hydration mismatch and matches the design's "AM". */
 export function clockTime(ms: number): string {
-  return new Date(ms).toLocaleTimeString(undefined, {
-    hour: "numeric",
-    minute: "2-digit",
-  });
+  const d = new Date(ms);
+  const minutes = d.getMinutes();
+  const ampm = d.getHours() >= 12 ? "PM" : "AM";
+  let hour = d.getHours() % 12;
+  if (hour === 0) hour = 12;
+  return `${hour}:${String(minutes).padStart(2, "0")} ${ampm}`;
 }
 
 /** First name for the greeting hero; falls back to the whole string / a default. */

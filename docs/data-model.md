@@ -182,13 +182,20 @@ Firestore requires composite indexes for these query shapes; declare them in
 
 ## Ticket status workflow
 
-    new ──claim&triage──▶ assigned ──request info──▶ waiting_for_student
-                             ▲   │                         │
-              student reply  │   │ mark resolved           │ student reply
-                             │   ▼                         │
-                          (assigned) ◀────reopen──── resolved ──close──▶ closed
-                                                        │
-                                          auto-close after N days no reply
+```mermaid
+stateDiagram-v2
+    [*] --> new: student submits (US-03)
+    new --> assigned: Claim & triage (staff)
+    assigned --> waiting_for_student: Request info (staff)
+    waiting_for_student --> assigned: Student reply
+    assigned --> resolved: Mark resolved (staff)
+    resolved --> assigned: Reopen (student/staff)
+    assigned --> closed: Close (staff)
+    resolved --> closed: Close / auto-close (N days)
+    closed --> [*]
+```
+
+Every ticket transition also appends an `events` audit doc (see the subcollection above).
 
 - **Claim & triage** (staff): `new → assigned`, sets `assigneeId`/`assigneeName`, may set priority.
 - **Request info** (staff): `assigned → waiting_for_student`, requires a message.
@@ -201,3 +208,24 @@ Firestore requires composite indexes for these query shapes; declare them in
 The allowed set lives as a `{ from: [...] }` map inside the transition server action; the
 action validates `from` includes the current status, writes the new status + audit event
 atomically, and denormalizes `lastActorName`. See ADR-0002.
+
+## Appointment status workflow
+
+```mermaid
+stateDiagram-v2
+    [*] --> booked: Book (US-04)
+    booked --> booked: Reschedule (updates start/end)
+    booked --> cancelled: Cancel (student/staff)
+    booked --> completed: Mark completed (staff, US-07)
+    cancelled --> [*]
+    completed --> [*]
+```
+
+- **Book** (student): create with `status:"booked"` (US-04).
+- **Reschedule** (student): updates `start`/`end`, stays `booked`.
+- **Cancel** (student or staff): `booked → cancelled` (terminal).
+- **Mark completed** (staff): `booked → completed` (terminal) — deferred to US-07 (ADR-0005).
+
+Unlike tickets, appointments have **no `events` subcollection** — transitions are plain field
+updates guarded by the same `{ from: [...] }` map in the server action (`lib/actions/appointments.ts`),
+with no audit doc.

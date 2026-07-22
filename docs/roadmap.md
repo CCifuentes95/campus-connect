@@ -48,13 +48,20 @@ Two-lane dashboard (requests + appointments) with per-lane empty states, rule-sc
   MVP (no Functions); note it or apply on read.
 
 ## US-04 — Book advising appointment · `book-advising`
-- **Goal:** 4-step booking (service → advisor → date/time → confirm); list + detail.
-- **Screens:** Book Advising, Appointments (student + advisor variants), Appointment Detail.
+**Scope: student spine only** (advisor views + mark-completed deferred to US-07 — see ADR-0005).
+- **Goal:** 4-step booking (service → advisor → date/time → confirm); student list + detail.
+- **Screens:** Book Advising (`/appointments/new`), Appointments — **student** (`/appointments`),
+  Appointment Detail (`/appointments/[id]`). *(Advisor Appointments variant → US-07.)*
 - **Data & rules:** create `appointments` (`status:"booked"`, service, advisorId/Name denorm,
-  start/end, mode). Conflict check vs the student's other appointments. Cancel / reschedule /
-  mark-completed transitions.
-- **Depends on:** US-02.
-- **Notes:** advisor availability is seeded/simplified for the MVP (design-brief booking flow).
+  start/end, mode, location). Conflict check vs the **student's own** appointments only.
+  Student transitions: **cancel** (`booked→cancelled`) + **reschedule** (update start/end),
+  via a server action `{ from: [...] }` guard. **No `events`** (appointments have no audit
+  subcollection). No rules change — the `appointments` rules already permit student
+  create/cancel/reschedule + staff read/update.
+- **Depends on:** US-02. Reuses the US-03 server-action + zod write pattern.
+- **Notes:** advisor availability is **seeded/simplified** — static advisor+service config
+  (3 advisors, 4 services) + deterministic slot generation, a slot marked unavailable when it
+  overlaps an existing appointment. No `availability` collection.
 
 ## US-06 — Notifications + preferences · `notifications`
 - **Goal:** in-app inbox + per-type channel preferences.
@@ -73,7 +80,11 @@ Two-lane dashboard (requests + appointments) with per-lane empty states, rule-sc
   (`assigned→waiting_for_student`), Mark resolved (`assigned→resolved`), Close, Reassign,
   Unassign — each writes an event. **Internal notes** (`internal_note`, visibility `internal`).
   `nextAction` field shown on the board.
-- **Depends on:** US-03 (tickets exist). Staff gating already built in US-01.
+- **Also owns the advisor appointment surface** (deferred from US-04 per ADR-0005): the
+  **advisor Appointments variant** (an advisor viewing their own booked slots), the advisor
+  view of Appointment Detail, and **mark-completed** (`booked→completed`). `appointments`
+  rules already permit staff read/update, so this is UI on top of the existing schema.
+- **Depends on:** US-03 (tickets exist), US-04 (appointments exist). Staff gating built in US-01.
 - **Notes:** reply-vs-internal-note composer; a staff reply moves to `waiting_for_student`.
 
 ## US-08 — Admin reporting · `admin-reporting`

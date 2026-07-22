@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { DashboardAppointment } from "@/lib/data/student-dashboard";
 import { clockTime, dateTile } from "@/lib/format";
 import { serviceLabel } from "@/lib/labels";
@@ -19,7 +20,10 @@ export function AppointmentCard({
     .toUpperCase();
 
   return (
-    <div className="flex gap-4 rounded-[14px] border border-line bg-card p-[18px] shadow-[0_1px_2px_var(--card-shadow)] transition-shadow hover:border-[color:var(--card-hover-border)] hover:shadow-[0_6px_20px_var(--card-hover-shadow)]">
+    <Link
+      href={`/appointments/${appointment.id}`}
+      className="flex gap-4 rounded-[14px] border border-line bg-card p-[18px] shadow-[0_1px_2px_var(--card-shadow)] transition-shadow hover:border-[color:var(--card-hover-border)] hover:shadow-[0_6px_20px_var(--card-hover-shadow)]"
+    >
       <div className="w-[58px] flex-shrink-0 rounded-[11px] bg-tile py-[10px] text-center text-white">
         <div className="text-[11px] font-semibold uppercase tracking-[0.5px] text-gold">
           {tile.month}
@@ -51,6 +55,6 @@ export function AppointmentCard({
           </div>
         ) : null}
       </div>
-    </div>
+    </Link>
   );
 }

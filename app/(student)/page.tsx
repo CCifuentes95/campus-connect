@@ -125,14 +125,10 @@ export default async function StudentDashboardPage() {
                 <AppointmentCard key={a.id} appointment={a} />
               ))}
               <Link
-                href="/appointments/new"
-                className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-dash bg-card p-[13px] text-[14px] font-semibold text-teal hover:border-[color:var(--teal)] hover:bg-[color:var(--dash-hover)]"
+                href="/appointments"
+                className="mt-[2px] self-start text-[13px] font-semibold text-teal hover:text-ink"
               >
-                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                Book another appointment
+                View all appointments <span aria-hidden="true">→</span>
               </Link>
             </div>
           )}
