@@ -71,6 +71,10 @@ Collections: `users` (+ `notifications`, `fcmTokens` subcollections), `tickets`
 
 **Context Checklist:**
 - [ ] Read relevant specs in `specs/[capability]/spec.md`
+- [ ] **For UI work:** follow the **UI build & comparison-check process** (Implementation notes &
+      gotchas) — pull the `claude-design` mockup first, apply the `frontend-design` +
+      `next-best-practices` skills, then compare against the design file and run a
+      `web-design-guidelines` review in **both light and dark** before the tasks are done.
 
 ## Build order
 
@@ -182,17 +186,32 @@ Build the student spine first — it's a working vertical slice — then layer t
 - **Finish-feature precheck:** verify every UI feature in **both light and dark** before calling
   it done (screenshot/Playwright).
 
-**UI definition-of-done (skills + mockups — see the `ui-quality-baseline` change):**
-Building or changing any screen is not done until it has:
-1. **Matched its `claude-design` mockup** where one exists — pull it via the design MCP
-   (`DesignSync` `get_file` from the *CampusConnect Student Dashboard* project, 13 screens +
-   `CampusConnect UI Kit.dc.html`). The mockup's tokens/structure win; don't redesign.
-2. **Applied the `frontend-design` and `next-best-practices` skills** while building (aesthetic
-   direction where no mockup exists; RSC boundaries, `Link`, `viewport`/`metadata`, async APIs).
-3. **Passed a `web-design-guidelines` review in BOTH themes** — visible `:focus-visible`
-   (global base is in `globals.css`), `aria-hidden` on decorative icons, `color-scheme`, skip
-   link to `#main`, `translate="no"` on brand/`#REQ` tokens, reduced-motion, content that
-   handles long/empty input. Baseline for the built pages landed in `ui-quality-baseline`.
+**UI build & comparison-check process (spec: `openspec/specs/ui-quality`; baseline shipped in
+the `ui-quality-baseline` change). Carry these as explicit tasks in every UI story (US-03…US-08)
+— a screen is not done until all five pass, in BOTH light and dark:**
+
+1. **Pull the design FIRST — don't trust the text brief.** Fetch the screen's mockup via the
+   design MCP (`DesignSync` `get_file` from the *CampusConnect Student Dashboard* project — 13
+   screens + `CampusConnect UI Kit.dc.html`). Adopt its `:root` + `.cc-dark` token values
+   **verbatim**; the mockup's tokens/structure/copy win — don't redesign or approximate.
+   (`docs/design-brief.md` is text and has drifted from the mockups — the `.dc.html` is truth.)
+2. **Build with the skills.** Apply `frontend-design` (visual direction only where no mockup
+   exists) and `next-best-practices` (RSC reads via `FirebaseServerApp`; keep `"use client"` at
+   leaves so `/login` stays static; `viewport` export for `theme-color`; `Link`; async
+   `cookies()`/`params`; `useSyncExternalStore` for pre-hydration DOM reads like the theme).
+3. **Compare against the design file — both themes.** Seed demo data (`functions/.../seedData.ts`),
+   run the app, and **screenshot light AND dark** (headless Playwright), then diff region-by-region
+   against the mockup. Watch the usual misses: hero kicker/title, lane header icons + tinted
+   backgrounds, differentiated CTAs (gold vs navy), status-glyph pills, teal category chips,
+   "Open →", and dark-only tokens (e.g. the date tile is navy-with-gold-month in dark, not gold).
+4. **Review with `web-design-guidelines` — both themes.** `:focus-visible` (global base in
+   `globals.css`), `aria-hidden` on decorative icons, `color-scheme` on `<html>`, skip link to
+   `#main`, `translate="no"` on brand/`#REQ`, reduced-motion, `line-clamp`/`min-w-0`/`tabular-nums`,
+   and keyboard tab-order.
+5. **Then mark the UI tasks done** (and record any justified deviation).
+
+Rule of thumb: the mockup encodes what it should *look* like (steps 1–3); `web-design-guidelines`
+encodes whether it's *accessible* (step 4). Both are required — they catch different classes of bug.
 
 **Testing:**
 - If the Chrome extension isn't connected, drive the real app with **headless Playwright**.
