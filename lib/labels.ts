@@ -29,6 +29,66 @@ export function isOpenStatus(status: string): boolean {
   return status !== "closed";
 }
 
+// ---- Track Ticket status pill + stepper (US-05) ----
+
+/** Which glyph the status pill shows. The pill itself is always the neutral pill-bg/pill-text
+ * (per the mockup); only the icon differs by status. The SVG lives in the pill component. */
+export type StatusGlyph =
+  | "new"
+  | "assigned"
+  | "waiting"
+  | "resolved"
+  | "closed";
+
+const STATUS_GLYPH: Record<string, StatusGlyph> = {
+  new: "new",
+  assigned: "assigned",
+  waiting_for_student: "waiting",
+  resolved: "resolved",
+  closed: "closed",
+};
+
+/** Student-facing status pill: the label ("In progress" for assigned, per data-model) plus the
+ * glyph key. Mirrors `appointmentStatusStyle` but the pill tint is neutral for every status. */
+export function studentStatusStyle(status: string): {
+  label: string;
+  glyph: StatusGlyph;
+} {
+  return {
+    label: studentStatusLabel(status),
+    glyph: STATUS_GLYPH[status] ?? "new",
+  };
+}
+
+/** The five lifecycle stages, in order — the stepper's fixed process labels (distinct from the
+ * status pill: `assigned`'s step reads "Assigned", its pill reads "In progress"). */
+export const STATUS_STEPS: { status: TicketStatus; label: string }[] = [
+  { status: "new", label: "New" },
+  { status: "assigned", label: "Assigned" },
+  { status: "waiting_for_student", label: "Waiting for you" },
+  { status: "resolved", label: "Resolved" },
+  { status: "closed", label: "Closed" },
+];
+
+export type StepState = "done" | "current" | "todo";
+
+/**
+ * The stepper's per-step state derived from the ticket's *stored* status — steps before the
+ * current status are `done`, the current one `current`, later ones `todo`. Never fabricates a
+ * status the ticket doesn't hold (no closed-on-read for aged resolved tickets). Unknown status
+ * falls back to the first step being current.
+ */
+export function stepStates(
+  status: string,
+): { status: TicketStatus; label: string; state: StepState }[] {
+  const idx = STATUS_STEPS.findIndex((s) => s.status === status);
+  const current = idx === -1 ? 0 : idx;
+  return STATUS_STEPS.map((s, i) => ({
+    ...s,
+    state: i < current ? "done" : i === current ? "current" : "todo",
+  }));
+}
+
 // Category canonical → student label (data-model.md categories table).
 const STUDENT_CATEGORY_LABEL: Record<string, string> = {
   registration: "Registration & holds",
