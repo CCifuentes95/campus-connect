@@ -39,11 +39,15 @@ export function TopNav({
   displayName,
   initials: initialsProp,
   activePath,
+  hasUnread,
 }: {
   role: Role;
   displayName?: string | null;
   initials?: string;
   activePath?: string;
+  /** Gold-dot unread indicator on the notification bell. Omit (undefined) to hide the bell
+   * entirely — staff/admin don't get notifications yet (US-07 hasn't shipped). */
+  hasUnread?: boolean;
 }) {
   const { subtitle, links } = NAV[role];
   // Prefer the precomputed profile initials; otherwise derive from the display name.
@@ -90,6 +94,34 @@ export function TopNav({
         </nav>
 
         <div className="flex flex-shrink-0 items-center gap-3.5">
+          {hasUnread !== undefined ? (
+            <Link
+              href="/notifications"
+              aria-label={hasUnread ? "Notifications (unread)" : "Notifications"}
+              className="relative flex h-[38px] w-[38px] items-center justify-center rounded-lg bg-white/10 text-white hover:bg-white/20"
+            >
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+              {hasUnread ? (
+                <span
+                  aria-hidden="true"
+                  className="absolute right-2 top-[7px] h-2 w-2 rounded-full border-2 border-nav bg-gold"
+                />
+              ) : null}
+            </Link>
+          ) : null}
           {displayName ? (
             <div className="flex items-center gap-2.5 border-l border-nav-muted/25 pl-3.5">
               <div className="whitespace-nowrap text-right leading-tight">

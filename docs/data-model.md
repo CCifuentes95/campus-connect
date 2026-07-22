@@ -49,7 +49,11 @@ One doc per account, id = Auth uid.
 
 ### Subcollection: `users/{uid}/notifications/{notificationId}`
 
-In-app notification feed for the user.
+In-app notification feed for the user. Written inline (best-effort, after the primary write
+succeeds) by the same server action that mutates the related ticket/appointment — **not** by
+a Cloud Function trigger, since no Cloud Functions are deployed in this MVP. `firestore.rules`
+allows the owning user to create their own notification docs, subject to a closed `type` enum
+and required-field check (see US-06 design.md).
 
 | Field | Type | Notes |
 |---|---|---|
