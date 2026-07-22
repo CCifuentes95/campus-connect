@@ -28,8 +28,9 @@ import {
 } from "@/lib/advising";
 import { getStudentProfile } from "@/lib/data/student-dashboard";
 import { getFirestoreForUser } from "@/lib/firebase/firestore";
-import { clockTime } from "@/lib/format";
+import { clockTime, timelineStamp } from "@/lib/format";
 import { serviceLabel } from "@/lib/labels";
+import { notifyStudent } from "@/lib/notify";
 
 const BookSchema = z.object({
   service: z.enum(SERVICE_VALUES),
@@ -156,6 +157,16 @@ export async function bookAppointment(
     updatedAt: serverTimestamp(),
   });
 
+  await notifyStudent({
+    db: store,
+    uid: currentUser.uid,
+    type: "appointment_booked",
+    title: "Appointment booked",
+    body: `${serviceLabel(service)} with ${advisor.name} on ${timelineStamp(startMs)}.`,
+    link: `/appointments/${ref.id}`,
+    refId: ref.id,
+  });
+
   revalidatePath("/appointments");
   revalidatePath("/");
   return { status: "success", id: ref.id, code };
@@ -186,6 +197,15 @@ export async function cancelAppointment(
     return { status: "error", message: "Only a booked appointment can be cancelled." };
   }
   await updateDoc(appt.ref, { status: "cancelled", updatedAt: serverTimestamp() });
+  await notifyStudent({
+    db: store,
+    uid: currentUser.uid,
+    type: "appointment_cancelled",
+    title: "Appointment cancelled",
+    body: `Your ${serviceLabel(String(appt.data.service ?? ""))} appointment was cancelled.`,
+    link: `/appointments/${id}`,
+    refId: id,
+  });
   revalidatePath("/appointments");
   revalidatePath(`/appointments/${id}`);
   revalidatePath("/");
@@ -225,6 +245,15 @@ export async function rescheduleAppointment(
     start: Timestamp.fromMillis(startMs),
     end: Timestamp.fromMillis(endMs),
     updatedAt: serverTimestamp(),
+  });
+  await notifyStudent({
+    db: store,
+    uid: currentUser.uid,
+    type: "appointment_booked",
+    title: "Appointment rescheduled",
+    body: `${serviceLabel(service)} moved to ${timelineStamp(startMs)}.`,
+    link: `/appointments/${id}`,
+    refId: id,
   });
   revalidatePath("/appointments");
   revalidatePath(`/appointments/${id}`);

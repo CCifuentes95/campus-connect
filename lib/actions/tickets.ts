@@ -18,6 +18,7 @@ import { z } from "zod";
 import { getStudentProfile } from "@/lib/data/student-dashboard";
 import { getFirestoreForUser } from "@/lib/firebase/firestore";
 import { CATEGORY_VALUES, PRIORITY_VALUES } from "@/lib/labels";
+import { notifyStudent } from "@/lib/notify";
 
 const CreateTicketSchema = z.object({
   title: z
@@ -215,12 +216,14 @@ export async function replyToTicket(
   const ticketRef = doc(store, "tickets", ticketId);
 
   let currentStatus: string;
+  let ticketCode: string;
   try {
     const snap = await getDoc(ticketRef);
     if (!snap.exists() || snap.data().studentId !== currentUser.uid) {
       return { status: "error", message: "We couldn't find that request." };
     }
     currentStatus = String(snap.data().status ?? "");
+    ticketCode = String(snap.data().code ?? "");
   } catch (err) {
     console.error("[tickets] replyToTicket read failed", err);
     return { status: "error", message: "Something went wrong — please try again." };
@@ -265,6 +268,16 @@ export async function replyToTicket(
     }
   }
 
+  await notifyStudent({
+    db: store,
+    uid: currentUser.uid,
+    type: "ticket_reply",
+    title: "Reply posted",
+    body: `Your reply on ${ticketCode} was posted.`,
+    link: `/requests/${ticketId}`,
+    refId: ticketId,
+  });
+
   revalidatePath(`/requests/${ticketId}`);
   revalidatePath("/requests");
   revalidatePath("/");
@@ -287,7 +300,8 @@ export async function reopenTicket(
   if (!currentUser) {
     return { status: "error", message: "Your session has expired — please sign in again." };
   }
-  const ticketRef = doc(db as Firestore, "tickets", ticketId);
+  const store = db as Firestore;
+  const ticketRef = doc(store, "tickets", ticketId);
 
   try {
     const snap = await getDoc(ticketRef);
@@ -295,12 +309,22 @@ export async function reopenTicket(
       return { status: "error", message: "We couldn't find that request." };
     }
     const currentStatus = String(snap.data().status ?? "");
+    const ticketCode = String(snap.data().code ?? "");
     if (!(REOPEN_FROM as readonly string[]).includes(currentStatus)) {
       return { status: "error", message: "This request can't be reopened." };
     }
     await updateDoc(ticketRef, {
       status: "assigned",
       updatedAt: serverTimestamp(),
+    });
+    await notifyStudent({
+      db: store,
+      uid: currentUser.uid,
+      type: "ticket_update",
+      title: "Request reopened",
+      body: `You reopened ${ticketCode}.`,
+      link: `/requests/${ticketId}`,
+      refId: ticketId,
     });
   } catch (err) {
     console.error("[tickets] reopenTicket failed", err);

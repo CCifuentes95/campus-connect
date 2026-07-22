@@ -210,6 +210,80 @@ async function main() {
     console.log(`  appointment ${a.code} (${a.daysAhead < 0 ? "past" : "upcoming"})`);
   }
 
+  // ---- notifications (US-06 — a few per wired type, mixed read/unread, Today + Earlier) ----
+  // NOT appointment_reminder — no scheduled function produces that in this MVP (see
+  // openspec/changes/notifications-preferences/design.md), so no fake reminder rows here.
+  const notifications = [
+    {
+      id: "seed-notif-1",
+      type: "ticket_reply",
+      title: "Reply posted",
+      body: "Your reply on REQ-2041 was posted.",
+      link: "/requests/seed-req-2041",
+      refId: "seed-req-2041",
+      read: false,
+      createdFromNow: -2 * HOUR,
+    },
+    {
+      id: "seed-notif-2",
+      type: "appointment_booked",
+      title: "Appointment booked",
+      body: "Academic advising with Dana Osei is confirmed.",
+      link: "/appointments/seed-apt-2048",
+      refId: "seed-apt-2048",
+      read: false,
+      createdFromNow: -5 * HOUR,
+    },
+    {
+      id: "seed-notif-3",
+      type: "ticket_update",
+      title: "Request reopened",
+      body: "You reopened REQ-2039.",
+      link: "/requests/seed-req-2039",
+      refId: "seed-req-2039",
+      read: true,
+      createdFromNow: -1 * DAY,
+    },
+    {
+      id: "seed-notif-4",
+      type: "appointment_cancelled",
+      title: "Appointment cancelled",
+      body: "Your Scholarship options review appointment was cancelled.",
+      link: "/appointments/seed-apt-2044",
+      refId: "seed-apt-2044",
+      read: true,
+      createdFromNow: -2 * DAY,
+    },
+    {
+      id: "seed-notif-5",
+      type: "appointment_booked",
+      title: "Appointment booked",
+      body: "Career planning & internships with Dana Osei is confirmed.",
+      link: "/appointments/seed-apt-2051",
+      refId: "seed-apt-2051",
+      read: true,
+      createdFromNow: -5 * DAY,
+    },
+  ];
+
+  for (const n of notifications) {
+    await db
+      .collection("users")
+      .doc(student.uid)
+      .collection("notifications")
+      .doc(n.id)
+      .set({
+        type: n.type,
+        title: n.title,
+        body: n.body,
+        link: n.link,
+        refId: n.refId,
+        read: n.read,
+        createdAt: ts(n.createdFromNow),
+      });
+    console.log(`  notification ${n.type} (${n.read ? "read" : "unread"})`);
+  }
+
   console.log("\nDone. Sign in as", STUDENT_EMAIL, "to see the populated dashboard.");
 }
 

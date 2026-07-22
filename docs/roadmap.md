@@ -63,15 +63,17 @@ Two-lane dashboard (requests + appointments) with per-lane empty states, rule-sc
   (3 advisors, 4 services) + deterministic slot generation, a slot marked unavailable when it
   overlaps an existing appointment. No `availability` collection.
 
-## US-06 — Notifications + preferences · `notifications`
+## US-06 — Notifications + preferences · `notifications` ✅ built
 - **Goal:** in-app inbox + per-type channel preferences.
 - **Screens:** Notifications (Inbox + Preferences).
 - **Data & rules:** `users/{uid}/notifications` (read/mark-read), `users.notificationPrefs`.
 - **Depends on:** US-03 / US-04 (events worth notifying about).
 - **⚠ Decisions:** design shows Email/**SMS**/In-app; stack is Email/**Push (FCM)**/In-app.
   Without Functions, FCM fan-out + email delivery aren't live — MVP writes **in-app**
-  notifications from the same server actions that mutate tickets/appointments; push/email are
-  future work. Confirm the channel set before building.
+  notifications from the same server actions that mutate tickets/appointments (reply, reopen,
+  book, cancel, reschedule); push/email are saved as preferences but not yet delivered.
+  `appointment_reminder` deferred (no scheduled function, like ticket auto-close). Rules
+  relaxed from function-only to owner-self-authored create (no Cloud Functions in this MVP).
 
 ## US-07 — Advisor/staff triage board · `staff-triage`
 - **Goal:** staff work queue + ticket handling.

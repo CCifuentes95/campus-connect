@@ -44,14 +44,24 @@ service cloud.firestore {
                     && unchanged('email');
       allow create, delete: if false;
 
-      // notifications feed — owner reads and marks read; writes come from functions
+      // notifications feed — owner reads, creates their own (no Cloud Functions are
+      // deployed in this MVP, so the notification write happens inline in the same
+      // server action that mutates the ticket/appointment — see US-06 design.md),
+      // and marks read
       match /notifications/{notificationId} {
         allow read: if isSelf(uid);
-        // owner may only flip `read`; everything else is function-written
+        allow create: if isSelf(uid)
+                      && request.resource.data.type in
+                           ['ticket_update', 'ticket_reply', 'appointment_booked',
+                            'appointment_reminder', 'appointment_cancelled']
+                      && request.resource.data.read == false
+                      && request.resource.data.keys().hasAll(
+                           ['type', 'title', 'body', 'link', 'read', 'createdAt', 'refId']);
+        // owner may only flip `read`
         allow update: if isSelf(uid)
                       && request.resource.data.diff(resource.data).affectedKeys()
                            .hasOnly(['read']);
-        allow create, delete: if false;
+        allow delete: if false;
       }
 
       // FCM device tokens — owner manages their own
