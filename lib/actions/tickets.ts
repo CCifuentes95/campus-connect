@@ -8,8 +8,10 @@ import {
   collection,
   doc,
   type Firestore,
+  getDoc,
   serverTimestamp,
   setDoc,
+  updateDoc,
 } from "firebase/firestore";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -149,4 +151,164 @@ export async function createTicket(
   revalidatePath("/");
 
   return { status: "success", id: ticketRef.id, code };
+}
+
+// ---------------------------------------------------------------------------
+// US-05 — Track Ticket: student write actions (reply, reopen).
+//
+// Both land the ticket on `assigned`, which the existing `tickets` update rule permits for the
+// owning student (result status ∈ {assigned, waiting_for_student}, studentId/assigneeId
+// unchanged) — so no firestore.rules change is needed. Named transitions live in plain
+// `{ from: [...] }` maps, not a state-machine library (project convention).
+// ---------------------------------------------------------------------------
+
+/** Reply moves a *waiting* ticket back to the staff queue; a comment on an already-in-progress
+ * ticket is event-only. Any other status is not a valid reply source. */
+const REPLY_FROM = ["assigned", "waiting_for_student"] as const;
+/** Reopen returns a done ticket to the staff queue. */
+const REOPEN_FROM = ["resolved", "closed"] as const;
+
+const ReplySchema = z.object({
+  message: z
+    .string()
+    .trim()
+    .min(1, "Write a message before posting.")
+    .max(1000, "Please keep your reply under 1000 characters."),
+});
+
+export type ReplyState =
+  | { status: "idle" }
+  | { status: "error"; message: string }
+  | { status: "success" };
+
+export type ReopenState =
+  | { status: "idle" }
+  | { status: "error"; message: string }
+  | { status: "success" };
+
+/**
+ * Post a public `student_reply` on a ticket. The event is the primary artifact (its failure is a
+ * real error, unlike US-03's best-effort `created` marker). Then, guarded by REPLY_FROM, bump the
+ * ticket: `waiting_for_student → assigned`; an `assigned` ticket stays assigned (updatedAt moves);
+ * a `new` ticket is left untouched (the rule forbids a student update that keeps status `new`, and
+ * we don't want a student comment to self-assign triage) — the event still posts.
+ */
+export async function replyToTicket(
+  _prev: ReplyState,
+  formData: FormData,
+): Promise<ReplyState> {
+  const ticketId = String(formData.get("ticketId") ?? "");
+  const parsed = ReplySchema.safeParse({
+    message: String(formData.get("message") ?? ""),
+  });
+  if (!parsed.success) {
+    const fe = parsed.error.flatten().fieldErrors;
+    return { status: "error", message: fe.message?.[0] ?? "Write a message before posting." };
+  }
+  if (!ticketId) return { status: "error", message: "Missing ticket reference." };
+
+  const { db, currentUser } = await getFirestoreForUser();
+  if (!currentUser) {
+    return { status: "error", message: "Your session has expired — please sign in again." };
+  }
+  const store = db as Firestore;
+  const ticketRef = doc(store, "tickets", ticketId);
+
+  let currentStatus: string;
+  try {
+    const snap = await getDoc(ticketRef);
+    if (!snap.exists() || snap.data().studentId !== currentUser.uid) {
+      return { status: "error", message: "We couldn't find that request." };
+    }
+    currentStatus = String(snap.data().status ?? "");
+  } catch (err) {
+    console.error("[tickets] replyToTicket read failed", err);
+    return { status: "error", message: "Something went wrong — please try again." };
+  }
+
+  const profile = await getStudentProfile();
+  const studentName =
+    profile?.displayName ?? profile?.email ?? currentUser.email ?? "Student";
+
+  // Event first (its create rule get()s the parent, which can't see a same-batch write).
+  try {
+    await addDoc(collection(ticketRef, "events"), {
+      type: "student_reply",
+      visibility: "public",
+      fromStatus: currentStatus,
+      toStatus: currentStatus === "waiting_for_student" ? "assigned" : currentStatus,
+      actorId: currentUser.uid,
+      actorName: studentName,
+      actorRole: "student",
+      message: parsed.data.message,
+      createdAt: serverTimestamp(),
+    });
+  } catch (err) {
+    console.error("[tickets] student_reply write failed", err);
+    return { status: "error", message: "Your reply didn't post — please try again." };
+  }
+
+  // Ticket bump: only for statuses whose result stays rules-valid (assigned / waiting→assigned).
+  // A `new` ticket is left as-is (see doc comment above).
+  if ((REPLY_FROM as readonly string[]).includes(currentStatus)) {
+    try {
+      await updateDoc(ticketRef, {
+        status: "assigned",
+        updatedAt: serverTimestamp(),
+        lastMessageAt: serverTimestamp(),
+        lastActorName: studentName,
+      });
+    } catch (err) {
+      // The reply (the thing the student cares about) already posted; a failed status bump
+      // shouldn't read as "reply failed". Log and report success.
+      console.error("[tickets] reply status bump failed", err);
+    }
+  }
+
+  revalidatePath(`/requests/${ticketId}`);
+  revalidatePath("/requests");
+  revalidatePath("/");
+  return { status: "success" };
+}
+
+/**
+ * Reopen a resolved/closed ticket → `assigned`, as a plain field update (status + updatedAt),
+ * guarded by REOPEN_FROM. No audit event is written (deliberate deviation from tickets'
+ * "event per transition" — recorded in the change); studentId/assigneeId are untouched.
+ */
+export async function reopenTicket(
+  _prev: ReopenState,
+  formData: FormData,
+): Promise<ReopenState> {
+  const ticketId = String(formData.get("ticketId") ?? "");
+  if (!ticketId) return { status: "error", message: "Missing ticket reference." };
+
+  const { db, currentUser } = await getFirestoreForUser();
+  if (!currentUser) {
+    return { status: "error", message: "Your session has expired — please sign in again." };
+  }
+  const ticketRef = doc(db as Firestore, "tickets", ticketId);
+
+  try {
+    const snap = await getDoc(ticketRef);
+    if (!snap.exists() || snap.data().studentId !== currentUser.uid) {
+      return { status: "error", message: "We couldn't find that request." };
+    }
+    const currentStatus = String(snap.data().status ?? "");
+    if (!(REOPEN_FROM as readonly string[]).includes(currentStatus)) {
+      return { status: "error", message: "This request can't be reopened." };
+    }
+    await updateDoc(ticketRef, {
+      status: "assigned",
+      updatedAt: serverTimestamp(),
+    });
+  } catch (err) {
+    console.error("[tickets] reopenTicket failed", err);
+    return { status: "error", message: "Something went wrong — please try again." };
+  }
+
+  revalidatePath(`/requests/${ticketId}`);
+  revalidatePath("/requests");
+  revalidatePath("/");
+  return { status: "success" };
 }

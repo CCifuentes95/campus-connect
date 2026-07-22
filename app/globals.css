@@ -28,6 +28,9 @@
   --err: #c0392b; /* form-field error (matches --pri-high) */
   --err-bg: #fdf0ee;
   --step-line: #dde3ea; /* "what happens next" connector */
+  --step-todo: #c9d4de; /* track-ticket stepper: not-yet-reached dot border + connector */
+  --warn-bg: #fbf3d9; /* "action needed" banner (waiting for student) */
+  --warn: #8a6a10;
   /* booking wizard: selected date/slot, slot grid states */
   --sel-bg: #0d2c49;
   --sel-text: #ffffff;
@@ -95,6 +98,9 @@
   --err: #f2a399;
   --err-bg: rgba(192, 57, 43, 0.16);
   --step-line: #24405c;
+  --step-todo: #2f4a63;
+  --warn-bg: rgba(215, 165, 36, 0.16);
+  --warn: #e8c06a;
   --sel-bg: #d7a524;
   --sel-text: #0d2c49;
   --slot-border: #2f4a63;
@@ -157,6 +163,9 @@
   --color-err: var(--err);
   --color-err-bg: var(--err-bg);
   --color-step-line: var(--step-line);
+  --color-step-todo: var(--step-todo);
+  --color-warn-bg: var(--warn-bg);
+  --color-warn: var(--warn);
   --color-teal: var(--teal);
   --color-teal-ink: var(--teal);
   --color-teal-tint: var(--teal-tint);

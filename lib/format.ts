@@ -19,6 +19,30 @@ export function relativeTime(ms: number | null, now: number = Date.now()): strin
   });
 }
 
+// Deterministic month abbreviations so date stamps don't vary by locale (matches clockTime's
+// intent — avoids hydration drift; rendered server-side on the Track Ticket detail).
+const MONTHS_SHORT = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+] as const;
+
+/** "Jul 18" — short month + day, deterministic. */
+export function shortDate(ms: number): string {
+  const d = new Date(ms);
+  return `${MONTHS_SHORT[d.getMonth()]} ${d.getDate()}`;
+}
+
+/** "Jul 18, 9:12 AM" — timeline event stamp. */
+export function timelineStamp(ms: number): string {
+  return `${shortDate(ms)}, ${clockTime(ms)}`;
+}
+
+/** "Jul 18, 2026 · 9:12 AM" — the sidebar "Created" row. */
+export function longDateTime(ms: number): string {
+  const d = new Date(ms);
+  return `${MONTHS_SHORT[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()} · ${clockTime(ms)}`;
+}
+
 export interface DateTile {
   month: string; // "JUL"
   day: string; // "24"
