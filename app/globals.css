@@ -20,9 +20,14 @@
   --ink: #0d2c49;
   --body: #4a5b6b;
   --muted: #7d8b99;
+  --muted-2: #5b6b7a; /* slightly darker muted — breadcrumbs, idle controls, cancel */
   --gold: #d7a524;
   --gold-hover: #e6b52f;
   --gold-ink: #b58e1c; /* gold text that passes contrast on light (kicker) */
+  --field-bg: #ffffff; /* form input background */
+  --err: #c0392b; /* form-field error (matches --pri-high) */
+  --err-bg: #fdf0ee;
+  --step-line: #dde3ea; /* "what happens next" connector */
   --teal: #064948; /* teal text that flips lighter in dark */
   --teal-tint: #e6f0ef;
   --pill-bg: #eef2f6;
@@ -69,9 +74,14 @@
   --ink: #f1f5f9;
   --body: #cdd8e2;
   --muted: #9db0c2;
+  --muted-2: #9db0c2;
   --gold: #d7a524;
   --gold-hover: #e6b52f;
   --gold-ink: #e6bd4a;
+  --field-bg: #143252;
+  --err: #f2a399;
+  --err-bg: rgba(192, 57, 43, 0.16);
+  --step-line: #24405c;
   --teal: #7fd0ce;
   --teal-tint: rgba(6, 73, 72, 0.45);
   --pill-bg: rgba(182, 198, 213, 0.12);
@@ -118,7 +128,11 @@
   --color-ink: var(--ink);
   --color-body: var(--body);
   --color-muted: var(--muted);
+  --color-muted-2: var(--muted-2);
   --color-gold-ink: var(--gold-ink);
+  --color-err: var(--err);
+  --color-err-bg: var(--err-bg);
+  --color-step-line: var(--step-line);
   --color-teal: var(--teal);
   --color-teal-ink: var(--teal);
   --color-teal-tint: var(--teal-tint);
@@ -190,6 +204,32 @@ body {
 
 .text-balance {
   text-wrap: balance;
+}
+
+/* Form inputs (Submit Support Request) — ported from the design mockup's `.field`.
+   Navy focus ring in light, gold in dark; the error variant tints border + background. */
+.field {
+  width: 100%;
+  font-size: 14px;
+  padding: 12px 13px;
+  border: 1px solid var(--field);
+  border-radius: 10px;
+  color: var(--ink);
+  background: var(--field-bg);
+}
+.field:focus {
+  outline: none;
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(13, 44, 73, 0.15);
+}
+:root[data-theme="dark"] .field:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(215, 165, 36, 0.25);
+}
+.field-error,
+.field-error:focus {
+  border-color: var(--err);
+  background: var(--err-bg);
 }
 
 /* Respect reduced-motion: neutralize transitions/animations without affecting layout. */

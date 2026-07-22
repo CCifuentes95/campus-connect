@@ -99,13 +99,14 @@ service cloud.firestore {
         // (internal notes are staff-only — see docs/data-model.md)
         allow read: if isStaff()
                     || (isSignedIn() && ticketOwner() && resource.data.visibility == 'public');
-        // creates: staff, or the owning student (their replies); actorId must be self.
-        // A student may only author public events, never internal notes.
+        // creates: staff, or the owning student. actorId must be self. A student may author
+        // only PUBLIC events, never internal notes — the "created" marker when they open the
+        // ticket (US-03) and "student_reply" when they respond (US-05).
         allow create: if request.resource.data.actorId == request.auth.uid
                       && (isStaff()
                           || (isSignedIn() && ticketOwner()
                               && request.resource.data.visibility == 'public'
-                              && request.resource.data.type == 'student_reply'));
+                              && request.resource.data.type in ['created', 'student_reply']));
         allow update, delete: if false; // audit log is immutable
       }
     }
