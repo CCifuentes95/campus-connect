@@ -57,22 +57,26 @@ export function serviceLabel(service: string): string {
   return SERVICE_LABEL[service] ?? service;
 }
 
-// Priority → label + brand colors (design-brief priority colors: High red, Medium amber,
-// Low green). `text`/`bg` are the pill ink and its tinted chip background.
+// Priority → label + the CSS custom properties for its color + tinted background. Returning
+// var() refs (not hex) lets the priority chips flip with the theme (see globals.css --pri-*).
 export interface PriorityStyle {
   label: string;
-  text: string;
-  bg: string;
+  colorVar: string;
+  tintVar: string;
 }
 
 const PRIORITY_STYLE: Record<string, PriorityStyle> = {
-  high: { label: "High", text: "#c0392b", bg: "#fbeae8" },
-  medium: { label: "Medium", text: "#c98a12", bg: "#fbf1de" },
-  low: { label: "Low", text: "#4a7a54", bg: "#e9f2ec" },
+  high: { label: "High", colorVar: "var(--pri-high)", tintVar: "var(--pri-high-bg)" },
+  medium: { label: "Medium", colorVar: "var(--pri-med)", tintVar: "var(--pri-med-bg)" },
+  low: { label: "Low", colorVar: "var(--pri-low)", tintVar: "var(--pri-low-bg)" },
 };
 
 export function priorityStyle(priority: string): PriorityStyle {
   return (
-    PRIORITY_STYLE[priority] ?? { label: priority || "—", text: "#4a5b6b", bg: "#eef2f6" }
+    PRIORITY_STYLE[priority] ?? {
+      label: priority || "—",
+      colorVar: "var(--muted)",
+      tintVar: "var(--inset)",
+    }
   );
 }
