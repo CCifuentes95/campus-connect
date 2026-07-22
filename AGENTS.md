@@ -182,6 +182,18 @@ Build the student spine first — it's a working vertical slice — then layer t
 - **Finish-feature precheck:** verify every UI feature in **both light and dark** before calling
   it done (screenshot/Playwright).
 
+**UI definition-of-done (skills + mockups — see the `ui-quality-baseline` change):**
+Building or changing any screen is not done until it has:
+1. **Matched its `claude-design` mockup** where one exists — pull it via the design MCP
+   (`DesignSync` `get_file` from the *CampusConnect Student Dashboard* project, 13 screens +
+   `CampusConnect UI Kit.dc.html`). The mockup's tokens/structure win; don't redesign.
+2. **Applied the `frontend-design` and `next-best-practices` skills** while building (aesthetic
+   direction where no mockup exists; RSC boundaries, `Link`, `viewport`/`metadata`, async APIs).
+3. **Passed a `web-design-guidelines` review in BOTH themes** — visible `:focus-visible`
+   (global base is in `globals.css`), `aria-hidden` on decorative icons, `color-scheme`, skip
+   link to `#main`, `translate="no"` on brand/`#REQ` tokens, reduced-motion, content that
+   handles long/empty input. Baseline for the built pages landed in `ui-quality-baseline`.
+
 **Testing:**
 - If the Chrome extension isn't connected, drive the real app with **headless Playwright**.
 - The Identity Toolkit REST endpoint `accounts:signInWithPassword?key=<webApiKey>` tests auth

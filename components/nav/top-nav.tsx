@@ -65,7 +65,7 @@ export function TopNav({
             IB
           </div>
           <div className="leading-tight">
-            <div className="text-[16px] font-bold">CampusConnect</div>
+            <div className="text-[16px] font-bold" translate="no">CampusConnect</div>
             <div className="text-[11px] font-medium text-nav-muted">{subtitle}</div>
           </div>
         </div>
@@ -96,7 +96,7 @@ export function TopNav({
                 <div className="text-[14px] font-semibold">{displayName}</div>
                 <div className="text-[11px] capitalize text-nav-muted">{role}</div>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-gold bg-teal text-[15px] font-bold text-white">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-gold bg-teal-solid text-[15px] font-bold text-white">
                 {initials}
               </div>
             </div>

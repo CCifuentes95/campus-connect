@@ -15,7 +15,9 @@ export default async function AdminLayout({
   return (
     <>
       <TopNav role="admin" displayName={user.email} />
-      <main className="flex-1">{children}</main>
+      <main id="main" tabIndex={-1} className="flex-1 scroll-mt-4 outline-none">
+        {children}
+      </main>
     </>
   );
 }

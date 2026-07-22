@@ -1,78 +1,152 @@
 @import "tailwindcss";
 
-/* Fixed IBU brand palette (docs/design-brief.md) — the constants the themes point at. */
+/* Fixed IBU brand constants — used where a color must NOT flip (nav logo, avatars). */
 @theme {
   --color-navy: #0d2c49;
   --color-navy-muted: #b6c6d5;
   --color-gold: #d7a524;
   --color-gold-hover: #e6b52f;
-  --color-teal: #064948;
+  --color-teal-solid: #064948; /* avatar / icon fills, both themes */
 }
 
-/* Semantic role tokens — light defaults; flipped under [data-theme="dark"] (design-brief
-   .cc-dark). Components use these (bg-page, bg-card, text-ink, …) so one flip restyles all. */
+/* Semantic tokens — values ported verbatim from the CampusConnect Dashboard design
+   (`:root` = light). Flipped under [data-theme="dark"] below. */
 :root {
-  --page: #f6f8fa; /* outermost background */
-  --card: #ffffff; /* raised card / panel surface */
-  --inset: #f1f5f9; /* subtle inset: chips, empty states */
-  --ink: #0d2c49; /* headings / strong text */
-  --body: #4a5b6b; /* body text */
-  --muted: #7d8b99; /* secondary text */
-  --line: #e2e8ef; /* card / divider borders */
-  --field: #b6c6d5; /* form field borders */
-  --accent: #d7a524; /* primary CTA (gold) */
-  --accent-ink: #0d2c49; /* text on the gold accent */
-  --teal-ink: #064948; /* teal text on page/surface */
-  --nav-bg: #0d2c49; /* top-nav bar */
-  --nav-muted: #b6c6d5; /* inactive nav text */
+  color-scheme: light;
+  --page: #f6f8fa;
+  --card: #ffffff;
+  --border: #e2e8ef;
+  --divider: #eef2f6;
+  --ink: #0d2c49;
+  --body: #4a5b6b;
+  --muted: #7d8b99;
+  --gold: #d7a524;
+  --gold-hover: #e6b52f;
+  --gold-ink: #b58e1c; /* gold text that passes contrast on light (kicker) */
+  --teal: #064948; /* teal text that flips lighter in dark */
+  --teal-tint: #e6f0ef;
+  --pill-bg: #eef2f6;
+  --pill-text: #3a4d5f;
+  --lane-a-head: #eef6f5;
+  --lane-a-border: #dde8e7;
+  --lane-b-head: #eef2f6;
+  --lane-b-border: #dde3ea;
+  --count-a-bg: #d9eae8;
+  --count-a-text: #064948;
+  --count-b-bg: #dde4ec;
+  --count-b-text: #0d2c49;
+  --pri-high-bg: #fdf0ee;
+  --pri-high: #c0392b;
+  --pri-med-bg: #fdf7ea;
+  --pri-med: #c98a12;
+  --pri-low-bg: #eef6f0;
+  --pri-low: #4a7a54;
+  --tile: #0d2c49; /* appointment date tile */
+  --tile-soft: #f0f3f7; /* empty-appt icon well */
+  --dash-border: #b6c6d5;
+  --dash-hover: #f6faf9;
+  --btn2: #0d2c49; /* secondary (Book advising) button */
+  --btn2-hover: #123a5e;
+  --btn2-text: #ffffff;
+  --nav: #0d2c49;
+  --nav-muted: #b6c6d5;
+  --field: #b6c6d5;
+  --inset: #f1f5f9;
   --alert-bg: #fdf0ee;
   --alert-border: #f0c4bd;
   --alert-ink: #7a3b30;
-  --tile-bg: #0d2c49; /* appointment date tile */
-  --tile-ink: #ffffff;
+  --card-shadow: rgba(13, 44, 73, 0.04);
+  --card-hover-shadow: rgba(13, 44, 73, 0.08);
+  --card-hover-border: #b6c6d5;
 }
 
 :root[data-theme="dark"] {
+  color-scheme: dark;
   --page: #081826;
   --card: #0f2942;
-  --inset: #12324c;
-  --ink: #eaf1f8;
-  --body: #b8c6d4;
-  --muted: #8497a8;
-  --line: #1e3a54;
+  --border: #24405c;
+  --divider: #22405c;
+  --ink: #f1f5f9;
+  --body: #cdd8e2;
+  --muted: #9db0c2;
+  --gold: #d7a524;
+  --gold-hover: #e6b52f;
+  --gold-ink: #e6bd4a;
+  --teal: #7fd0ce;
+  --teal-tint: rgba(6, 73, 72, 0.45);
+  --pill-bg: rgba(182, 198, 213, 0.12);
+  --pill-text: #cdd8e2;
+  --lane-a-head: #0c2338;
+  --lane-a-border: #24405c;
+  --lane-b-head: #0c2338;
+  --lane-b-border: #24405c;
+  --count-a-bg: rgba(6, 73, 72, 0.5);
+  --count-a-text: #7fd0ce;
+  --count-b-bg: rgba(255, 255, 255, 0.12);
+  --count-b-text: #cdd8e2;
+  --pri-high-bg: rgba(192, 57, 43, 0.16);
+  --pri-high: #f2a399;
+  --pri-med-bg: rgba(201, 138, 18, 0.18);
+  --pri-med: #e8c06a;
+  --pri-low-bg: rgba(74, 122, 84, 0.22);
+  --pri-low: #8fc79a;
+  --tile: #143252;
+  --tile-soft: #143252;
+  --dash-border: #24405c;
+  --dash-hover: #12314f;
+  --btn2: rgba(255, 255, 255, 0.1);
+  --btn2-hover: rgba(255, 255, 255, 0.18);
+  --btn2-text: #f1f5f9;
+  --nav: #05101c;
+  --nav-muted: #9db0c2;
   --field: #2c4a66;
-  --accent: #d7a524;
-  --accent-ink: #0d2c49;
-  --teal-ink: #4db6b0;
-  --nav-bg: #0a1f33;
-  --nav-muted: #b6c6d5;
-  --alert-bg: #3a201c;
+  --inset: #12324c;
+  --alert-bg: rgba(192, 57, 43, 0.16);
   --alert-border: #6b342b;
-  --alert-ink: #f2c9c0;
-  --tile-bg: #d7a524; /* gold replaces navy for the tile in dark (contrast) */
-  --tile-ink: #0d2c49;
+  --alert-ink: #f2a399;
+  --card-shadow: rgba(0, 0, 0, 0.3);
+  --card-hover-shadow: rgba(0, 0, 0, 0.45);
+  --card-hover-border: #35577a;
 }
 
-/* Map roles to Tailwind color utilities via var() so bg-page / text-ink / border-line flip. */
+/* Map roles to Tailwind color utilities via var() so bg-page / text-ink / … flip by theme. */
 @theme inline {
   --color-page: var(--page);
   --color-card: var(--card);
-  --color-inset: var(--inset);
+  --color-line: var(--border);
+  --color-divider: var(--divider);
   --color-ink: var(--ink);
   --color-body: var(--body);
   --color-muted: var(--muted);
-  --color-line: var(--line);
-  --color-field: var(--field);
-  --color-accent: var(--accent);
-  --color-accent-ink: var(--accent-ink);
-  --color-teal-ink: var(--teal-ink);
-  --color-nav: var(--nav-bg);
+  --color-gold-ink: var(--gold-ink);
+  --color-teal: var(--teal);
+  --color-teal-ink: var(--teal);
+  --color-teal-tint: var(--teal-tint);
+  --color-pill-bg: var(--pill-bg);
+  --color-pill-text: var(--pill-text);
+  --color-lane-a: var(--lane-a-head);
+  --color-lane-a-border: var(--lane-a-border);
+  --color-lane-b: var(--lane-b-head);
+  --color-lane-b-border: var(--lane-b-border);
+  --color-count-a-bg: var(--count-a-bg);
+  --color-count-a-text: var(--count-a-text);
+  --color-count-b-bg: var(--count-b-bg);
+  --color-count-b-text: var(--count-b-text);
+  --color-tile: var(--tile);
+  --color-tile-soft: var(--tile-soft);
+  --color-dash: var(--dash-border);
+  --color-btn2: var(--btn2);
+  --color-btn2-hover: var(--btn2-hover);
+  --color-btn2-text: var(--btn2-text);
+  --color-nav: var(--nav);
   --color-nav-muted: var(--nav-muted);
+  --color-field: var(--field);
+  --color-accent: var(--gold);
+  --color-accent-ink: #0d2c49;
   --color-alert-bg: var(--alert-bg);
   --color-alert-border: var(--alert-border);
   --color-alert-ink: var(--alert-ink);
-  --color-tile: var(--tile-bg);
-  --color-tile-ink: var(--tile-ink);
+  --color-inset: var(--inset);
   --font-sans: var(--font-poppins);
 }
 
@@ -80,4 +154,52 @@ body {
   background: var(--page);
   color: var(--body);
   font-family: var(--font-poppins), system-ui, sans-serif;
+}
+
+::selection {
+  background: #d7a524;
+  color: #0d2c49;
+}
+
+/* Visible keyboard focus on every interactive element (WIG). Gold reads on both themes;
+   :focus-visible keeps the ring off mouse clicks. Components may override with their own ring. */
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Skip link — hidden until focused, then pinned top-left over the nav. */
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 50;
+  transform: translateY(-150%);
+  background: var(--card);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+/* Respect reduced-motion: neutralize transitions/animations without affecting layout. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

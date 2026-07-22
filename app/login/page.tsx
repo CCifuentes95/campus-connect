@@ -11,9 +11,13 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen bg-page">
       <BrandPanel />
-      <div className="flex flex-1 items-center justify-center p-8">
+      <main
+        id="main"
+        tabIndex={-1}
+        className="flex flex-1 items-center justify-center p-8 outline-none"
+      >
         <LoginForm />
-      </div>
+      </main>
     </div>
   );
 }
@@ -26,7 +30,7 @@ function BrandPanel() {
           IB
         </div>
         <div className="leading-tight">
-          <div className="text-[18px] font-bold">CampusConnect</div>
+          <div className="text-[18px] font-bold" translate="no">CampusConnect</div>
           <div className="text-[12px] font-medium text-navy-muted">
             International Business University
           </div>

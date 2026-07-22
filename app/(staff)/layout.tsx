@@ -16,7 +16,9 @@ export default async function StaffLayout({
   return (
     <>
       <TopNav role={user.role === "admin" ? "admin" : "advisor"} displayName={user.email} />
-      <main className="flex-1">{children}</main>
+      <main id="main" tabIndex={-1} className="flex-1 scroll-mt-4 outline-none">
+        {children}
+      </main>
     </>
   );
 }
