@@ -1,40 +1,83 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-poppins);
-}
-
-/* IBU brand tokens (docs/design-brief.md) — use `bg-navy`, `text-gold`, etc. */
+/* Fixed IBU brand palette (docs/design-brief.md) — the constants the themes point at. */
 @theme {
   --color-navy: #0d2c49;
   --color-navy-muted: #b6c6d5;
   --color-gold: #d7a524;
   --color-gold-hover: #e6b52f;
   --color-teal: #064948;
-  --color-body: #4a5b6b;
-  --color-muted: #7d8b99;
-  --color-field: #b6c6d5;
-  --color-surface: #f6f8fa;
-  --color-alert-bg: #fdf0ee;
-  --color-alert-border: #f0c4bd;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Semantic role tokens — light defaults; flipped under [data-theme="dark"] (design-brief
+   .cc-dark). Components use these (bg-page, bg-card, text-ink, …) so one flip restyles all. */
+:root {
+  --page: #f6f8fa; /* outermost background */
+  --card: #ffffff; /* raised card / panel surface */
+  --inset: #f1f5f9; /* subtle inset: chips, empty states */
+  --ink: #0d2c49; /* headings / strong text */
+  --body: #4a5b6b; /* body text */
+  --muted: #7d8b99; /* secondary text */
+  --line: #e2e8ef; /* card / divider borders */
+  --field: #b6c6d5; /* form field borders */
+  --accent: #d7a524; /* primary CTA (gold) */
+  --accent-ink: #0d2c49; /* text on the gold accent */
+  --teal-ink: #064948; /* teal text on page/surface */
+  --nav-bg: #0d2c49; /* top-nav bar */
+  --nav-muted: #b6c6d5; /* inactive nav text */
+  --alert-bg: #fdf0ee;
+  --alert-border: #f0c4bd;
+  --alert-ink: #7a3b30;
+  --tile-bg: #0d2c49; /* appointment date tile */
+  --tile-ink: #ffffff;
+}
+
+:root[data-theme="dark"] {
+  --page: #081826;
+  --card: #0f2942;
+  --inset: #12324c;
+  --ink: #eaf1f8;
+  --body: #b8c6d4;
+  --muted: #8497a8;
+  --line: #1e3a54;
+  --field: #2c4a66;
+  --accent: #d7a524;
+  --accent-ink: #0d2c49;
+  --teal-ink: #4db6b0;
+  --nav-bg: #0a1f33;
+  --nav-muted: #b6c6d5;
+  --alert-bg: #3a201c;
+  --alert-border: #6b342b;
+  --alert-ink: #f2c9c0;
+  --tile-bg: #d7a524; /* gold replaces navy for the tile in dark (contrast) */
+  --tile-ink: #0d2c49;
+}
+
+/* Map roles to Tailwind color utilities via var() so bg-page / text-ink / border-line flip. */
+@theme inline {
+  --color-page: var(--page);
+  --color-card: var(--card);
+  --color-inset: var(--inset);
+  --color-ink: var(--ink);
+  --color-body: var(--body);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-field: var(--field);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-teal-ink: var(--teal-ink);
+  --color-nav: var(--nav-bg);
+  --color-nav-muted: var(--nav-muted);
+  --color-alert-bg: var(--alert-bg);
+  --color-alert-border: var(--alert-border);
+  --color-alert-ink: var(--alert-ink);
+  --color-tile: var(--tile-bg);
+  --color-tile-ink: var(--tile-ink);
+  --font-sans: var(--font-poppins);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--page);
+  color: var(--body);
   font-family: var(--font-poppins), system-ui, sans-serif;
 }

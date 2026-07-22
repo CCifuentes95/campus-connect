@@ -153,6 +153,35 @@ Build the student spine first — it's a working vertical slice — then layer t
   `VERCEL_PROJECT_ID` (the `ORG_ID` is the project's `accountId`, readable from the Vercel API).
   Disable Vercel's native Git auto-deploy so the Action is the only deploy path.
 
+**`NEXT_PUBLIC_*` are inlined at BUILD time (bit us — "API key not valid"):**
+- `next build` bakes `NEXT_PUBLIC_*` into the client bundle. A build run with placeholder env
+  (e.g. `NEXT_PUBLIC_FIREBASE_API_KEY=x` for a quick compile check) ships `apiKey:"x"`; a
+  `next start` serving that `.next` makes **every** browser sign-in 400 with *"API key not
+  valid"* while the same key works via curl. Only ever `next build` with the real `.env.local`,
+  and use `next dev` for iterating. Debug order: REST probe the key (below) → if valid, capture
+  the **key the browser actually sends** (Playwright on the identitytoolkit request) →
+  `grep -r 'apiKey:"' .next` to see what's baked.
+
+**Firestore composite indexes must be DEPLOYED, not just declared:**
+- Declaring a composite index in `firestore.indexes.json` is not enough — a query needing it
+  throws `failed-precondition` ("The query requires an index…") until you
+  `firebase deploy --only firestore:indexes`. Data reads should render an **error** state
+  distinct from **empty** so an undeployed index doesn't masquerade as "no data" (US-02 does).
+
+**Theming (light/dark — see the `dark-mode-theming` change):**
+- `app/globals.css` defines **semantic role tokens** (`--page`, `--card`, `--inset`, `--ink`,
+  `--body`, `--line`, `--accent`, `--teal-ink`, `--tile`, …) in `:root`, flipped under
+  `:root[data-theme="dark"]`, and registered via `@theme inline` so utilities (`bg-page`,
+  `text-ink`, `border-line`, …) restyle from one root marker. **Use these tokens, not raw hex or
+  fixed brand utilities**, on new UI. Fixed brand constants (`navy/gold/teal`) stay for the
+  always-dark nav and gold CTAs.
+- No-flash SSR: a tiny pre-paint script in `app/layout.tsx` (`lib/theme.ts` `NO_FLASH_SCRIPT`)
+  sets `data-theme` from the `cc-theme` cookie → else OS `prefers-color-scheme`, **client-side**
+  so `/login` stays statically prerendered. The nav toggle persists via the cookie;
+  `<html suppressHydrationWarning>`; the toggle reads the attribute via `useSyncExternalStore`.
+- **Finish-feature precheck:** verify every UI feature in **both light and dark** before calling
+  it done (screenshot/Playwright).
+
 **Testing:**
 - If the Chrome extension isn't connected, drive the real app with **headless Playwright**.
 - The Identity Toolkit REST endpoint `accounts:signInWithPassword?key=<webApiKey>` tests auth

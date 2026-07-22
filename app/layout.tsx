@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth/auth-provider";
+import { NO_FLASH_SCRIPT } from "@/lib/theme";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -20,7 +21,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${poppins.variable} h-full antialiased`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${poppins.variable} h-full antialiased`}
+    >
+      <head>
+        {/* Resolve the theme (cookie → OS) before paint so there's no flash. Kept client-side
+            so routes stay statically prerenderable (AGENTS.md: /login prerenders static). */}
+        <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
+      </head>
       <body className="flex min-h-full flex-col">
         <AuthProvider>{children}</AuthProvider>
       </body>

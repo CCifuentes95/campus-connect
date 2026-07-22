@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 // interactive form (login-form.tsx) is a client component.
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen bg-surface">
+    <div className="flex min-h-screen bg-page">
       <BrandPanel />
       <div className="flex flex-1 items-center justify-center p-8">
         <LoginForm />

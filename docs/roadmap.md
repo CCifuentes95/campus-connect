@@ -14,7 +14,10 @@ Build order (student spine first). Suggested OpenSpec change name in `code`.
 IBU sign-in, default-student, advisor/admin via `setRole`, role-gated routing.
 Archived at `openspec/changes/archive/2026-07-21-auth-role-access`.
 
-## US-02 — Student dashboard · `student-dashboard`
+## US-02 — Student dashboard · `student-dashboard` ✅ built
+Two-lane dashboard (requests + appointments) with per-lane empty states, rule-scoped
+`FirebaseServerApp` reads, and the real profile name wired into the hero + nav. Delivers the
+"first rule-scoped server read" (US-01 task 6.2). Change: `openspec/changes/student-dashboard`.
 - **Goal:** the signed-in student's home — two lanes side by side (support requests +
   advising appointments), with a new-student empty state.
 - **Screens:** CampusConnect Dashboard (populated + empty).
