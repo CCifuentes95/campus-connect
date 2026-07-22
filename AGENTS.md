@@ -139,6 +139,16 @@ Build the student spine first — it's a working vertical slice — then layer t
 - Keep the client boundary at the **leaves**: `app/login/page.tsx` is a server component
   (metadata + static brand panel) and only `login-form.tsx` is `"use client"`, so `/login`
   prerenders static. Split pages this way.
+- **A `"use server"` module's exports must take only serializable args** (they're the Server
+  Action RPC boundary). A shared write helper that takes a live `Firestore`/`db` instance
+  therefore **cannot** live in an action file — put it in a plain module. US-06's best-effort
+  `notifyStudent(db, …)` lives in **`lib/notify.ts`**, called from `lib/actions/*.ts`;
+  `lib/actions/notifications.ts` holds only the real form-bound actions (mark-read, save-prefs).
+- **`Date.now()` (also `Math.random()`) in a server-component render trips the
+  `react-hooks/purity` ESLint rule** ("Cannot call impure function during render"). Wrap it —
+  `lib/advising.ts` `nowMs()` and `lib/notifications.ts` `nowMs()` are the pattern. Compute
+  "now" once in the RSC and pass it down to client children as a prop so time-bucketing
+  (e.g. Today/Earlier) can't drift between the server and client render.
 
 **Firebase auth on Vercel (SSR):**
 - Server components read Firestore via **`FirebaseServerApp`** (`lib/firebase/server.ts`),
