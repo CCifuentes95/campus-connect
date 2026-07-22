@@ -65,7 +65,7 @@ export function LoginForm() {
 
   return (
     <form onSubmit={onSubmit} className="w-full max-w-[400px]">
-      <h2 className="mb-1.5 text-[25px] font-bold text-navy">Sign in</h2>
+      <h2 className="mb-1.5 text-[25px] font-bold text-ink">Sign in</h2>
       <p className="mb-6 text-[14.5px] leading-snug text-body">
         Use your IBU account. Your role and view are set automatically.
       </p>
@@ -75,14 +75,14 @@ export function LoginForm() {
           role="alert"
           className="mb-5 rounded-xl border border-alert-border bg-alert-bg p-3.5"
         >
-          <div className="text-[14px] font-semibold text-navy">{alert.title}</div>
-          <div className="mt-0.5 text-[13px] leading-snug text-body">{alert.body}</div>
+          <div className="text-[14px] font-semibold text-alert-ink">{alert.title}</div>
+          <div className="mt-0.5 text-[13px] leading-snug text-alert-ink">{alert.body}</div>
         </div>
       ) : null}
 
       <label
         htmlFor="email"
-        className="mb-1.5 block text-[13px] font-semibold text-navy"
+        className="mb-1.5 block text-[13px] font-semibold text-ink"
       >
         IBU email
       </label>
@@ -97,11 +97,11 @@ export function LoginForm() {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="you@ibu.edu"
-        className="mb-4 w-full rounded-[11px] border-[1.5px] border-field bg-white px-3.5 py-3 text-[14.5px] text-navy outline-none focus:border-navy"
+        className="mb-4 w-full rounded-[11px] border-[1.5px] border-field bg-card px-3.5 py-3 text-[14.5px] text-ink outline-none focus:border-accent"
       />
 
       <div className="mb-1.5 flex items-center justify-between">
-        <label htmlFor="password" className="text-[13px] font-semibold text-navy">
+        <label htmlFor="password" className="text-[13px] font-semibold text-ink">
           Password
         </label>
         {/* Stub — password reset is not implemented in the MVP (US-01 task 4.4). */}
@@ -123,7 +123,7 @@ export function LoginForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="••••••••"
-          className="w-full rounded-[11px] border-[1.5px] border-field bg-white px-3.5 py-3 pr-16 text-[14.5px] text-navy outline-none focus:border-navy"
+          className="w-full rounded-[11px] border-[1.5px] border-field bg-card px-3.5 py-3 pr-16 text-[14.5px] text-ink outline-none focus:border-accent"
         />
         <button
           type="button"
@@ -148,7 +148,7 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-[11px] bg-gold py-3.5 text-[15px] font-bold text-navy hover:bg-gold-hover disabled:opacity-60"
+        className="w-full rounded-[11px] bg-accent py-3.5 text-[15px] font-bold text-accent-ink hover:bg-gold-hover disabled:opacity-60"
       >
         {loading ? "Signing in…" : "Sign in"}
       </button>
