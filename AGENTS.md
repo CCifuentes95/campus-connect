@@ -26,7 +26,11 @@ exercise, so favor pragmatic, shippable choices over infrastructure for its own 
 
 ## Architecture principles
 
-- **Server actions over route handlers** for mutations. Validate input with **zod** at the boundary.
+- **Server actions over route handlers** for mutations. Validate input with **zod** at the
+  boundary. **zod is v4** (`^4.4.3`) — use v4 idioms (`schema.safeParse` → `error.flatten()
+  .fieldErrors`; `.catch(default)`; `z.enum(tuple)`), not v3. The established shape is a
+  discriminated `useActionState` result (`idle | error{fieldErrors,values} | success`); see
+  `lib/actions/tickets.ts` (US-03, the first write) as the template every mutation copies.
 - In server components, read Firestore through **`FirebaseServerApp`** so security rules
   apply under the signed-in user's credentials.
 - **Roles come from custom claims**, not a Firestore lookup, so rules stay read-free. A
@@ -35,7 +39,16 @@ exercise, so favor pragmatic, shippable choices over infrastructure for its own 
   by the **`setRole` Admin SDK tool** (`functions/src/scripts/setRole.ts`). Claims refresh on
   the next token refresh — force with `getIdToken(true)`.
 - **Status transitions live in a plain `{ from: [allowed...] }` map in a server action**,
-  not a state-machine library. Every transition writes an `events` doc (audit).
+  not a state-machine library. **Tickets** write an `events` doc per transition (audit).
+  **Appointments have NO `events` subcollection** — their transitions (cancel/reschedule/
+  complete) are plain field updates guarded by the same `{ from: [...] }` map, no audit doc.
+  The ticket create-path event is written **sequentially after** the ticket (not in a
+  `writeBatch`): the events rule reads the parent ticket via `get()`, which can't see a
+  same-batch create — so batch it and the event write fails. Best-effort it (swallow + log).
+- **Human reference codes** are derived, not counters: a `code` field = `PREFIX-` +
+  uppercased last-6 of the doc id (`REQ-…` tickets, `APT-…` appointments), written on create
+  (additive field — the create rule only asserts `studentId`/`status`). Reads alphanumeric —
+  a **deliberate deviation** from the mockups' numeric `#REQ-2042`/`#APT-2048` examples.
 - **Denormalize display names** (studentName, advisorName, actorName) onto tickets,
   appointments, and events so read-heavy views never fan out — Firestore has no joins.
 - Keep it flat and simple. Don't add a service/library until a real read or rule needs it.
