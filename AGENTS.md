@@ -185,6 +185,23 @@ Build the student spine first — it's a working vertical slice — then layer t
   `firebase deploy --only firestore:indexes`. Data reads should render an **error** state
   distinct from **empty** so an undeployed index doesn't masquerade as "no data" (US-02 does).
 
+**Firestore rules are NOT filters — a restricted `getDocs` must constrain the guarded field**
+**(bit US-05):**
+- A security rule that only permits reading *some* docs in a collection (e.g. the events read
+  rule lets a student see `visibility == 'public'` only) does **not** silently drop the rest — a
+  `getDocs` that could match a non-readable doc is **rejected wholesale** (`permission-denied`).
+  The query must *prove* it only touches readable docs, so it MUST include the matching
+  constraint (`where('visibility','==','public')`). Rules filter *documents*; they never filter
+  *query results*.
+- To avoid a composite index for that constraint, filter on the guarded field (equality → the
+  automatic single-field index) and **sort in memory** rather than adding `orderBy` on a
+  different field (which would force a composite index). US-05's `lib/data/ticket-detail.ts`
+  reads public events this way. This recurs for any rules-restricted read — US-07 internal
+  notes, notifications.
+- A per-doc `getDoc` on a non-owned doc likewise **throws** `permission-denied` (not "not
+  found") — map that to your not-found state so you never leak the doc's existence (US-05
+  conflates missing ⇄ forbidden deliberately).
+
 **Theming (light/dark — see the `dark-mode-theming` change):**
 - `app/globals.css` defines **semantic role tokens** (`--page`, `--card`, `--inset`, `--ink`,
   `--body`, `--line`, `--accent`, `--teal-ink`, `--tile`, …) in `:root`, flipped under
