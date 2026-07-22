@@ -28,6 +28,19 @@
   --err: #c0392b; /* form-field error (matches --pri-high) */
   --err-bg: #fdf0ee;
   --step-line: #dde3ea; /* "what happens next" connector */
+  /* booking wizard: selected date/slot, slot grid states */
+  --sel-bg: #0d2c49;
+  --sel-text: #ffffff;
+  --slot-border: #cdd8e2;
+  --slot-un-bg: #f1f4f7;
+  --slot-un-text: #a9b6c2;
+  /* appointment status badges */
+  --booked-bg: #e6f0ef;
+  --booked: #064948;
+  --ok-bg: #eef6f0;
+  --ok: #2f6b3f;
+  --cancel-bg: #fdf0ee;
+  --cancel: #c0392b;
   --teal: #064948; /* teal text that flips lighter in dark */
   --teal-tint: #e6f0ef;
   --pill-bg: #eef2f6;
@@ -82,6 +95,17 @@
   --err: #f2a399;
   --err-bg: rgba(192, 57, 43, 0.16);
   --step-line: #24405c;
+  --sel-bg: #d7a524;
+  --sel-text: #0d2c49;
+  --slot-border: #2f4a63;
+  --slot-un-bg: #0c2035;
+  --slot-un-text: #5a6f83;
+  --booked-bg: rgba(6, 73, 72, 0.45);
+  --booked: #7fd0ce;
+  --ok-bg: rgba(74, 122, 84, 0.22);
+  --ok: #8fc79a;
+  --cancel-bg: rgba(192, 57, 43, 0.16);
+  --cancel: #f2a399;
   --teal: #7fd0ce;
   --teal-tint: rgba(6, 73, 72, 0.45);
   --pill-bg: rgba(182, 198, 213, 0.12);

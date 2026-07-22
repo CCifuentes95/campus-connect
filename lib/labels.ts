@@ -110,6 +110,24 @@ export function serviceLabel(service: string): string {
   return SERVICE_LABEL[service] ?? service;
 }
 
+// Appointment status → badge label + color/tint var refs (theme-aware, like priorityStyle).
+export function appointmentStatusStyle(status: string): {
+  label: string;
+  colorVar: string;
+  tintVar: string;
+} {
+  switch (status) {
+    case "booked":
+      return { label: "Booked", colorVar: "var(--booked)", tintVar: "var(--booked-bg)" };
+    case "completed":
+      return { label: "Completed", colorVar: "var(--ok)", tintVar: "var(--ok-bg)" };
+    case "cancelled":
+      return { label: "Cancelled", colorVar: "var(--cancel)", tintVar: "var(--cancel-bg)" };
+    default:
+      return { label: status || "—", colorVar: "var(--muted)", tintVar: "var(--inset)" };
+  }
+}
+
 // Priority → label + the CSS custom properties for its color + tinted background. Returning
 // var() refs (not hex) lets the priority chips flip with the theme (see globals.css --pri-*).
 export interface PriorityStyle {
