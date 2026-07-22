@@ -118,17 +118,21 @@ export const getUpcomingAppointments = cache(
           limit(APPOINTMENT_FETCH_LIMIT),
         ),
       );
-      const items = snap.docs.map((d) => {
-        const data = d.data();
-        return {
-          id: d.id,
-          service: str(data.service),
-          title: str(data.title),
-          advisorName: str(data.advisorName),
-          startMs: toMillis(data.start) ?? 0,
-          mode: str(data.mode),
-        } satisfies DashboardAppointment;
-      });
+      const items = snap.docs
+        // Only still-attendable sessions belong on the dashboard's "upcoming" lane —
+        // exclude cancelled/completed (status filtered in-memory to avoid a composite index).
+        .filter((d) => d.data().status === "booked")
+        .map((d) => {
+          const data = d.data();
+          return {
+            id: d.id,
+            service: str(data.service),
+            title: str(data.title),
+            advisorName: str(data.advisorName),
+            startMs: toMillis(data.start) ?? 0,
+            mode: str(data.mode),
+          } satisfies DashboardAppointment;
+        });
       return { items, error: false };
     } catch (err) {
       console.error("[student-dashboard] getUpcomingAppointments failed", err);

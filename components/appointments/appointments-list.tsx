@@ -95,9 +95,12 @@ function EmptyState() {
 export function AppointmentsList({ appointments, nowMs }: { appointments: ListAppointment[]; nowMs: number }) {
   const [filter, setFilter] = useState<Filter>("upcoming");
 
+  // "Upcoming" = still attendable (booked + in the future). Cancelled/completed appointments
+  // move to "Past" regardless of date, so a cancelled future slot never sits under Upcoming.
   const { upcoming, past } = useMemo(() => {
-    const up = appointments.filter((a) => a.startMs >= nowMs).sort((x, y) => x.startMs - y.startMs);
-    const pa = appointments.filter((a) => a.startMs < nowMs).sort((x, y) => y.startMs - x.startMs);
+    const isUpcoming = (a: ListAppointment) => a.status === "booked" && a.startMs >= nowMs;
+    const up = appointments.filter(isUpcoming).sort((x, y) => x.startMs - y.startMs);
+    const pa = appointments.filter((a) => !isUpcoming(a)).sort((x, y) => y.startMs - x.startMs);
     return { upcoming: up, past: pa };
   }, [appointments, nowMs]);
 
