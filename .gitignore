@@ -46,3 +46,6 @@ serviceAccount*.json
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# CodeGraph local index (per-machine, do not commit)
+.codegraph/
