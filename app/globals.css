@@ -95,6 +95,15 @@
   --internal-border: #ebd28f;
   --internal-ink: #8a6a10;
   --composer-bg: #ffffff; /* reply/internal composer body */
+  /* US-08 admin reporting — trend + chart palette (verbatim from Admin Dashboard mockup) */
+  --up: #c0392b; /* KPI trend arrow — increase (red when increase is bad) */
+  --down: #2f6b3f; /* KPI trend arrow — decrease / good (green) */
+  --chart-navy: #0d2c49;
+  --chart-teal: #0a7371;
+  --chart-gold: #d7a524;
+  --chart-lite: #8fb0cc;
+  --grid: #e2e8ef; /* chart gridlines */
+  --chart-track: #eef2f6; /* unfilled bar / donut track */
 }
 
 :root[data-theme="dark"] {
@@ -179,6 +188,15 @@
   --internal-border: rgba(215, 165, 36, 0.4);
   --internal-ink: #e8c06a;
   --composer-bg: #0c2338;
+  /* US-08 admin reporting (dark) */
+  --up: #f2a399;
+  --down: #8fc79a;
+  --chart-navy: #6ea3d6;
+  --chart-teal: #4db8b5;
+  --chart-gold: #e8c06a;
+  --chart-lite: #3d5f80;
+  --grid: #24405c;
+  --chart-track: #17324c;
 }
 
 /* Map roles to Tailwind color utilities via var() so bg-page / text-ink / … flip by theme. */
