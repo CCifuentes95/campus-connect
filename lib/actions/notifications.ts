@@ -17,6 +17,7 @@ import {
 } from "firebase/firestore";
 import { revalidatePath } from "next/cache";
 import { getFirestoreForUser } from "@/lib/firebase/firestore";
+import { isEnabled } from "@/lib/flags";
 import {
   type NotificationPrefs,
   normalizePrefs,
@@ -25,12 +26,15 @@ import {
   prefFieldName,
 } from "@/lib/notifications";
 
+const DISABLED = "Notifications are currently unavailable.";
+
 export type MarkReadState = { status: "idle" } | { status: "error"; message: string } | { status: "success" };
 
 export async function markNotificationRead(
   _prev: MarkReadState,
   formData: FormData,
 ): Promise<MarkReadState> {
+  if (!isEnabled("notifications")) return { status: "error", message: DISABLED };
   const notificationId = String(formData.get("notificationId") ?? "");
   if (!notificationId) return { status: "error", message: "Missing notification reference." };
 
@@ -57,6 +61,7 @@ export async function markAllNotificationsRead(
   _prev: MarkReadState,
   _formData: FormData,
 ): Promise<MarkReadState> {
+  if (!isEnabled("notifications")) return { status: "error", message: DISABLED };
   const { db, currentUser } = await getFirestoreForUser();
   if (!currentUser) {
     return { status: "error", message: "Your session has expired — please sign in again." };
@@ -105,6 +110,7 @@ export async function savePreferences(
   _prev: PreferencesState,
   formData: FormData,
 ): Promise<PreferencesState> {
+  if (!isEnabled("notifications")) return { status: "error", message: DISABLED };
   const { db, currentUser } = await getFirestoreForUser();
   if (!currentUser) {
     return { status: "error", message: "Your session has expired — please sign in again." };

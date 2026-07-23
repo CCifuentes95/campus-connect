@@ -21,6 +21,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getFirestoreForUser } from "@/lib/firebase/firestore";
 import { getSessionUser } from "@/lib/firebase/session";
+import { isEnabled } from "@/lib/flags";
 import { CATEGORY_VALUES, PRIORITY_VALUES } from "@/lib/labels";
 import { notifyStudent } from "@/lib/notify";
 
@@ -50,6 +51,11 @@ async function loadStaffTicket(ticketId: string): Promise<
       data: Record<string, unknown>;
     }
 > {
+  // Feature-flag gate for the whole staff ticket surface (defence-in-depth behind the route
+  // gate) — every staff ticket action funnels through here.
+  if (!isEnabled("staff-triage")) {
+    return { ok: false, result: { status: "error", message: "Staff triage is currently unavailable." } };
+  }
   if (!ticketId) {
     return { ok: false, result: { status: "error", message: "Missing ticket reference." } };
   }

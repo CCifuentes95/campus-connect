@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { RequestForm } from "@/components/requests/request-form";
+import { FeatureUnavailable } from "@/components/feature-unavailable";
+import { isEnabled } from "@/lib/flags";
 
 export const metadata: Metadata = {
   title: "New support request · CampusConnect",
@@ -8,6 +10,16 @@ export const metadata: Metadata = {
 };
 
 export default function NewRequestPage() {
+  if (!isEnabled("submit-request")) {
+    return (
+      <FeatureUnavailable
+        title="Submitting requests is unavailable"
+        message="New support requests are temporarily turned off. Please check back later."
+        backHref="/requests"
+        backLabel="Back to my requests"
+      />
+    );
+  }
   return (
     <div className="mx-auto w-full max-w-[1120px] px-8 pb-16 pt-[22px]">
       <Link

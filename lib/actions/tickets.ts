@@ -17,6 +17,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getStudentProfile } from "@/lib/data/student-dashboard";
 import { getFirestoreForUser } from "@/lib/firebase/firestore";
+import { isEnabled } from "@/lib/flags";
 import { CATEGORY_VALUES, PRIORITY_VALUES } from "@/lib/labels";
 import { notifyStudent } from "@/lib/notify";
 
@@ -70,6 +71,16 @@ export async function createTicket(
     priority: String(formData.get("priority") ?? "medium"),
     description: String(formData.get("description") ?? ""),
   };
+
+  // Feature-flag gate (defence-in-depth behind the route gate).
+  if (!isEnabled("submit-request")) {
+    return {
+      status: "error",
+      message: "Submitting requests is currently unavailable.",
+      fieldErrors: {},
+      values,
+    };
+  }
 
   const parsed = CreateTicketSchema.safeParse(values);
   if (!parsed.success) {
