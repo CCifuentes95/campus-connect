@@ -18,9 +18,7 @@ const NAV: Record<Role, { subtitle: string; links: NavLink[] }> = {
     subtitle: "Staff · Support workspace",
     links: [
       { label: "Triage board", href: "/staff/triage" },
-      { label: "My requests", href: "/staff/requests" },
-      { label: "Appointments", href: "/appointments" },
-      { label: "Reports", href: "/admin/reports" },
+      { label: "Appointments", href: "/staff/appointments" },
     ],
   },
   admin: {

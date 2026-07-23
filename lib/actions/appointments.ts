@@ -172,6 +172,38 @@ export async function bookAppointment(
   return { status: "success", id: ref.id, code };
 }
 
+/**
+ * Mark a booked appointment completed (US-07 staff action). Guarded by { from: ["booked"] };
+ * a plain field update (appointments have no audit subcollection). Staff may update any
+ * appointment (firestore.rules `isStaff()`), so this loads by id without an ownership check.
+ * studentId/advisorId are left untouched.
+ */
+export async function completeAppointment(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const id = String(formData.get("id") ?? "");
+  const { db, currentUser } = await getFirestoreForUser();
+  if (!currentUser || !id) {
+    return { status: "error", message: "Your session has expired — please sign in again." };
+  }
+  const store = db as Firestore;
+  try {
+    const snap = await getDoc(doc(store, "appointments", id));
+    if (!snap.exists()) return { status: "error", message: "Appointment not found." };
+    if (snap.data().status !== "booked") {
+      return { status: "error", message: "Only a booked appointment can be completed." };
+    }
+    await updateDoc(snap.ref, { status: "completed", updatedAt: serverTimestamp() });
+  } catch (err) {
+    console.error("[appointments] completeAppointment failed", err);
+    return { status: "error", message: "Couldn't update the appointment — please try again." };
+  }
+  revalidatePath("/staff/appointments");
+  revalidatePath(`/staff/appointments/${id}`);
+  return { status: "success" };
+}
+
 /** Load an appointment the caller owns; returns null if missing or not theirs. */
 async function ownedAppointment(db: Firestore, id: string, uid: string) {
   const snap = await getDoc(doc(db, "appointments", id));

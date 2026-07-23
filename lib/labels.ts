@@ -89,6 +89,68 @@ export function stepStates(
   }));
 }
 
+// ---- Staff-facing labels (US-07 triage) ----
+// The stored status/category is canonical; staff see a different label than students
+// (data-model.md audience table). Kept separate from the student maps above.
+
+const STAFF_STATUS_LABEL: Record<string, string> = {
+  new: "New",
+  assigned: "Assigned",
+  waiting_for_student: "Waiting for student",
+  resolved: "Resolved",
+  closed: "Closed",
+};
+
+export function staffStatusLabel(status: string): string {
+  return STAFF_STATUS_LABEL[status] ?? status;
+}
+
+const STAFF_CATEGORY_LABEL: Record<string, string> = {
+  registration: "Academic",
+  records: "Records",
+  financial_aid: "Finance",
+  advising: "Advising",
+  enrollment: "Academic",
+  it: "IT Support",
+  career: "Career",
+  other: "Other",
+};
+
+export function staffCategoryLabel(category: string): string {
+  return STAFF_CATEGORY_LABEL[category] ?? category;
+}
+
+/** Named staff transitions available from a given status (drives the detail status-actions
+ * panel and validates Kanban drops). `assign`/`reassign`/`unassign` are assignment-only and
+ * handled separately; these are the status-changing actions. */
+export type StaffAction =
+  | "claim"
+  | "request_info"
+  | "mark_resolved"
+  | "close"
+  | "reopen";
+
+const STAFF_ACTIONS_BY_STATUS: Record<string, StaffAction[]> = {
+  new: ["claim"],
+  assigned: ["mark_resolved", "request_info"],
+  waiting_for_student: ["mark_resolved", "request_info"],
+  resolved: ["close", "reopen"],
+  closed: [],
+};
+
+export function staffActionsFor(status: string): StaffAction[] {
+  return STAFF_ACTIONS_BY_STATUS[status] ?? [];
+}
+
+/** The four Kanban columns, in order (design-brief triage board). `closed` has no column —
+ * closing happens from the detail panel, not the board. */
+export const KANBAN_COLUMNS: { status: TicketStatus; label: string }[] = [
+  { status: "new", label: "New" },
+  { status: "assigned", label: "Assigned" },
+  { status: "waiting_for_student", label: "Waiting for student" },
+  { status: "resolved", label: "Resolved" },
+];
+
 // Category canonical → student label (data-model.md categories table).
 const STUDENT_CATEGORY_LABEL: Record<string, string> = {
   registration: "Registration & holds",

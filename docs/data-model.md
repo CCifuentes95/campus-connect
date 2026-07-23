@@ -52,8 +52,11 @@ One doc per account, id = Auth uid.
 In-app notification feed for the user. Written inline (best-effort, after the primary write
 succeeds) by the same server action that mutates the related ticket/appointment — **not** by
 a Cloud Function trigger, since no Cloud Functions are deployed in this MVP. `firestore.rules`
-allows the owning user to create their own notification docs, subject to a closed `type` enum
-and required-field check (see US-06 design.md).
+allows the owning user **or any staff member** to create a notification doc here, subject to a
+closed `type` enum and required-field check. Staff-create (US-07) is what lets a staff ticket
+action (claim/reply/request-info/resolve) drop a notification into the owning student's inbox
+inline — reusing `ticket_reply` (staff reply) and `ticket_update` (status changes); no new
+type values. Only the owner may read or mark-read. (See US-06/US-07 design.md.)
 
 | Field | Type | Notes |
 |---|---|---|
