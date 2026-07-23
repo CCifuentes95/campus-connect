@@ -18,6 +18,7 @@ import { getFirestore, Timestamp } from "firebase-admin/firestore";
 
 const STUDENT_EMAIL = "student@myibu.ca";
 const ADVISOR_EMAIL = "advisor@myibu.ca";
+const ADMIN_EMAIL = "admin@myibu.ca";
 const STUDENT_NAME = "Amara Okafor";
 const ADVISOR_NAME = "Dana Osei";
 
@@ -123,9 +124,10 @@ async function main() {
       updatedAt: ts(t.updatedFromNow),
       lastActorName: t.status === "waiting_for_student" ? ADVISOR_NAME : STUDENT_NAME,
       lastMessageAt: ts(t.updatedFromNow),
-      resolvedAt: t.status === "resolved" ? ts(t.updatedFromNow) : null,
+      resolvedAt: t.status === "resolved" || t.status === "closed" ? ts(t.updatedFromNow) : null,
       nextAction: null,
-      rating: null,
+      // satisfaction is seeded (no rating-collection UI yet) — feeds the admin KPI/trend.
+      rating: t.status === "resolved" || t.status === "closed" ? 4 : null,
     });
     console.log(`  ticket ${t.code} (${t.status})`);
   }
@@ -394,7 +396,69 @@ async function main() {
   });
   console.log("  appointment APT-2030 (completed)");
 
-  console.log("\nDone. Sign in as", STUDENT_EMAIL, "or", ADVISOR_EMAIL, "to see the populated views.");
+  // ==========================================================================
+  // US-08 reporting history — a batch of tickets spread across ~8 weeks with
+  // varied categories/statuses + seeded ratings, so the admin charts (requests
+  // over time, status donut, category bars, satisfaction trend) have real shape.
+  // Deterministic (index-derived, no randomness) so re-runs are idempotent.
+  // ==========================================================================
+  const HIST_CATEGORIES = ["registration", "advising", "records", "financial_aid", "it", "career"];
+  const HIST_TITLES: Record<string, string> = {
+    registration: "Course registration question",
+    advising: "Advising plan review",
+    records: "Records / transcript request",
+    financial_aid: "Financial aid enquiry",
+    it: "Portal access issue",
+    career: "Career services question",
+  };
+  const HIST_OWNERS = [
+    { id: advisorId, name: ADVISOR_NAME },
+    { id: PRIYA_ID, name: PRIYA_NAME },
+    { id: null as string | null, name: null as string | null },
+  ];
+  const HIST_RATINGS = [5, 4, 4, 5, 3, 4, 5, 4];
+  const HIST_COUNT = 48;
+
+  for (let i = 0; i < HIST_COUNT; i++) {
+    const category = HIST_CATEGORIES[i % HIST_CATEGORIES.length]!;
+    const daysAgo = Math.floor((i * 56) / HIST_COUNT); // spread 0..~55 days
+    const createdMs = -daysAgo * DAY - 6 * HOUR;
+    // ~70% resolved/closed (rated), ~30% still open across the lifecycle
+    const openBucket = i % 10 < 3;
+    const status = openBucket
+      ? (["new", "assigned", "waiting_for_student"] as const)[i % 3]!
+      : i % 2 === 0
+        ? "resolved"
+        : "closed";
+    const done = status === "resolved" || status === "closed";
+    const owner = status === "new" ? HIST_OWNERS[2]! : HIST_OWNERS[i % 2]!;
+    const resolveDays = 1 + (i % 4); // 1..4 days to resolve
+    const priority = (["high", "medium", "low"] as const)[i % 3]!;
+    const id = `seed-hist-${String(i).padStart(2, "0")}`;
+
+    await db.collection("tickets").doc(id).set({
+      code: `REQ-H${String(i).padStart(3, "0")}`,
+      title: HIST_TITLES[category]!,
+      description: `Seeded reporting sample (${category}).`,
+      category,
+      priority,
+      status,
+      studentId: `seed-hist-student-${i}`,
+      studentName: `Student ${i + 1}`,
+      assigneeId: owner.id,
+      assigneeName: owner.name,
+      createdAt: ts(createdMs),
+      updatedAt: ts(createdMs + resolveDays * DAY),
+      lastActorName: owner.name ?? `Student ${i + 1}`,
+      lastMessageAt: ts(createdMs + resolveDays * DAY),
+      resolvedAt: done ? ts(createdMs + resolveDays * DAY) : null,
+      nextAction: null,
+      rating: done ? HIST_RATINGS[i % HIST_RATINGS.length]! : null,
+    });
+  }
+  console.log(`  reporting history: ${HIST_COUNT} tickets across ~8 weeks (seeded ratings)`);
+
+  console.log("\nDone. Sign in as", STUDENT_EMAIL, "or", ADVISOR_EMAIL, "or", ADMIN_EMAIL, "to see the populated views.");
 }
 
 main().catch((err) => {
