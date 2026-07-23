@@ -44,13 +44,15 @@ service cloud.firestore {
                     && unchanged('email');
       allow create, delete: if false;
 
-      // notifications feed — owner reads, creates their own (no Cloud Functions are
-      // deployed in this MVP, so the notification write happens inline in the same
-      // server action that mutates the ticket/appointment — see US-06 design.md),
-      // and marks read
+      // notifications feed — owner reads; owner OR staff creates (no Cloud Functions are
+      // deployed in this MVP, so the notification write happens inline in the same server
+      // action that mutates the ticket/appointment — see US-06/US-07 design.md). US-07 lets
+      // isStaff() write into a student's inbox so a staff ticket action (claim/reply/resolve)
+      // notifies the owning student; the type enum + exact-fields asserts still bound it.
+      // Owner marks read.
       match /notifications/{notificationId} {
         allow read: if isSelf(uid);
-        allow create: if isSelf(uid)
+        allow create: if (isSelf(uid) || isStaff())
                       && request.resource.data.type in
                            ['ticket_update', 'ticket_reply', 'appointment_booked',
                             'appointment_reminder', 'appointment_cancelled']

@@ -284,7 +284,117 @@ async function main() {
     console.log(`  notification ${n.type} (${n.read ? "read" : "unread"})`);
   }
 
-  console.log("\nDone. Sign in as", STUDENT_EMAIL, "to see the populated dashboard.");
+  // ==========================================================================
+  // US-07 staff triage board seed
+  // ==========================================================================
+
+  // ---- staff profiles (so getStaffRoster returns real names + the "assigned to me" KPI
+  //      resolves for advisor@myibu.ca). onUserCreate isn't deployed, so seed these directly.
+  await db.collection("users").doc(advisorId).set(
+    {
+      uid: advisorId,
+      email: ADVISOR_EMAIL,
+      displayName: ADVISOR_NAME,
+      initials: "DO",
+      role: "advisor",
+      title: "Academic Advisor",
+    },
+    { merge: true },
+  );
+  // A second staff member (profile-only — no auth account) so Reassign… has a target.
+  const PRIYA_ID = "seed-staff-priya";
+  const PRIYA_NAME = "Priya Nair";
+  await db.collection("users").doc(PRIYA_ID).set(
+    {
+      uid: PRIYA_ID,
+      email: "priya.nair@myibu.ca",
+      displayName: PRIYA_NAME,
+      initials: "PN",
+      role: "advisor",
+      title: "Student Success Advisor",
+    },
+    { merge: true },
+  );
+  console.log(`  staff roster: ${ADVISOR_NAME}, ${PRIYA_NAME}`);
+
+  // ---- board tickets (varied students/owners/statuses; some unassigned "new" backlog) ----
+  const boardTickets = [
+    { id: "seed-req-2052", code: "REQ-2052", title: "MSc Applied AI course conflict", category: "advising", priority: "high", status: "new", ownerId: null, ownerName: null, student: "Ade Balogun", nextAction: null, ageHours: 3 },
+    { id: "seed-req-2055", code: "REQ-2055", title: "Co-op placement inquiry", category: "career", priority: "low", status: "new", ownerId: null, ownerName: null, student: "Lin Zhao", nextAction: null, ageHours: 8 },
+    { id: "seed-req-2031", code: "REQ-2031", title: "Portal login / access issue", category: "it", priority: "medium", status: "assigned", ownerId: advisorId, ownerName: ADVISOR_NAME, student: "Marco Rossi", nextAction: "Reset SSO, confirm", ageHours: 6 },
+    { id: "seed-req-2036", code: "REQ-2036", title: "Transcript request", category: "records", priority: "medium", status: "assigned", ownerId: PRIYA_ID, ownerName: PRIYA_NAME, student: "Sara Kim", nextAction: "Verify student ID", ageHours: 26 },
+  ];
+  for (const t of boardTickets) {
+    await db.collection("tickets").doc(t.id).set({
+      code: t.code,
+      title: t.title,
+      description: `Seeded sample: ${t.title}.`,
+      category: t.category,
+      priority: t.priority,
+      status: t.status,
+      studentId: `seed-student-${t.id}`,
+      studentName: t.student,
+      assigneeId: t.ownerId,
+      assigneeName: t.ownerName,
+      createdAt: ts(-t.ageHours * HOUR - DAY),
+      updatedAt: ts(-t.ageHours * HOUR),
+      lastActorName: t.ownerName ?? t.student,
+      lastMessageAt: ts(-t.ageHours * HOUR),
+      resolvedAt: null,
+      nextAction: t.nextAction,
+      rating: null,
+    });
+    console.log(`  board ticket ${t.code} (${t.status}${t.ownerId ? "" : ", unassigned"})`);
+  }
+
+  // ---- give the mockup ticket (REQ-2041) a nextAction + a full event trail so the staff
+  //      detail timeline (request → claimed → internal note → reply) is populated ----
+  await db.collection("tickets").doc("seed-req-2041").set(
+    { nextAction: "Confirm hold with Records" },
+    { merge: true },
+  );
+  const req41Events = [
+    { id: "ev1", type: "created", visibility: "public", fromStatus: null, toStatus: "new", actorId: student.uid, actorName: STUDENT_NAME, actorRole: "student", message: "", fromNow: -3 * DAY },
+    { id: "ev2", type: "claimed", visibility: "public", fromStatus: "new", toStatus: "assigned", actorId: advisorId, actorName: ADVISOR_NAME, actorRole: "advisor", message: "", fromNow: -3 * DAY + 2 * HOUR },
+    { id: "ev3", type: "internal_note", visibility: "internal", fromStatus: null, toStatus: null, actorId: advisorId, actorName: ADVISOR_NAME, actorRole: "advisor", message: "Checked SIS — hold is a missing emergency-contact field, not financial. Quick fix once the student updates their profile.", fromNow: -3 * DAY + 3 * HOUR },
+    { id: "ev4", type: "message", visibility: "public", fromStatus: "assigned", toStatus: "waiting_for_student", actorId: advisorId, actorName: ADVISOR_NAME, actorRole: "advisor", message: "Hi — good news, this is just a missing emergency contact on your profile, not a financial hold. Please add one under Profile → Contacts and reply here; I'll clear the hold right after.", fromNow: -2 * HOUR },
+  ];
+  for (const e of req41Events) {
+    await db.collection("tickets").doc("seed-req-2041").collection("events").doc(e.id).set({
+      type: e.type,
+      visibility: e.visibility,
+      fromStatus: e.fromStatus,
+      toStatus: e.toStatus,
+      actorId: e.actorId,
+      actorName: e.actorName,
+      actorRole: e.actorRole,
+      message: e.message,
+      createdAt: ts(e.fromNow),
+    });
+  }
+  console.log("  events on REQ-2041 (created → claimed → internal note → reply)");
+
+  // ---- a completed advising appointment (so the advisor schedule shows a "Completed" card) ----
+  const doneStart = atClock(-7, 15);
+  await db.collection("appointments").doc("seed-apt-2030").set({
+    code: "APT-2030",
+    service: "academic_advising",
+    title: "Academic planning session",
+    studentId: student.uid,
+    studentName: STUDENT_NAME,
+    advisorId,
+    advisorName: ADVISOR_NAME,
+    start: doneStart,
+    end: Timestamp.fromMillis(doneStart.toMillis() + 45 * 60 * 1000),
+    mode: "video",
+    location: "Join by video",
+    status: "completed",
+    notes: "",
+    createdAt: ts(-9 * DAY),
+  });
+  console.log("  appointment APT-2030 (completed)");
+
+  console.log("\nDone. Sign in as", STUDENT_EMAIL, "or", ADVISOR_EMAIL, "to see the populated views.");
 }
 
 main().catch((err) => {

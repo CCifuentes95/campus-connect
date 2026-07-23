@@ -82,6 +82,19 @@
   --unread-bg: #f2f9f8; /* notification row background while unread */
   --toggle-on: #064948; /* preferences matrix toggle track, on */
   --toggle-off: #c9d4de; /* preferences matrix toggle track, off */
+  /* US-07 staff triage — verbatim from Triage Board / Staff Ticket Detail mockups */
+  --row-unassigned: #fffdf5; /* gold-tinted unassigned queue row */
+  --row-mine: #f2f9f8; /* teal-tinted "assigned to me" row */
+  --row-mine-bar: #064948; /* left accent bar on my rows */
+  --head-bg: #f6f8fa; /* table header row */
+  --kanban-col: #eef2f6; /* kanban column well */
+  --sbtn-bg: #ffffff; /* secondary/outline button (Assign/Reassign/Unassign) */
+  --sbtn-border: #b6c6d5;
+  --sbtn-text: #0d2c49;
+  --internal-bg: #fdf7ea; /* internal-note card (amber, staff only) */
+  --internal-border: #ebd28f;
+  --internal-ink: #8a6a10;
+  --composer-bg: #ffffff; /* reply/internal composer body */
 }
 
 :root[data-theme="dark"] {
@@ -153,6 +166,19 @@
   --unread-bg: rgba(6, 73, 72, 0.16);
   --toggle-on: #3d8b89;
   --toggle-off: #2f4a63;
+  /* US-07 staff triage (dark) */
+  --row-unassigned: rgba(215, 165, 36, 0.08);
+  --row-mine: rgba(6, 73, 72, 0.18);
+  --row-mine-bar: #3d8b89;
+  --head-bg: #0c2338;
+  --kanban-col: #0c2338;
+  --sbtn-bg: #143252;
+  --sbtn-border: #24405c;
+  --sbtn-text: #f1f5f9;
+  --internal-bg: rgba(215, 165, 36, 0.12);
+  --internal-border: rgba(215, 165, 36, 0.4);
+  --internal-ink: #e8c06a;
+  --composer-bg: #0c2338;
 }
 
 /* Map roles to Tailwind color utilities via var() so bg-page / text-ink / … flip by theme. */
