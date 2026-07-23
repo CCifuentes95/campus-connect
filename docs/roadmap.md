@@ -75,7 +75,7 @@ Two-lane dashboard (requests + appointments) with per-lane empty states, rule-sc
   `appointment_reminder` deferred (no scheduled function, like ticket auto-close). Rules
   relaxed from function-only to owner-self-authored create (no Cloud Functions in this MVP).
 
-## US-07 — Advisor/staff triage board · `staff-triage`
+## US-07 — Advisor/staff triage board · `staff-triage` ✅ built
 - **Goal:** staff work queue + ticket handling.
 - **Screens:** Triage Board (queue + kanban), Staff Ticket Detail.
 - **Data & rules:** read all `tickets` (staff); actions — Claim (`new→assigned`), Request info
@@ -89,7 +89,7 @@ Two-lane dashboard (requests + appointments) with per-lane empty states, rule-sc
 - **Depends on:** US-03 (tickets exist), US-04 (appointments exist). Staff gating built in US-01.
 - **Notes:** reply-vs-internal-note composer; a staff reply moves to `waiting_for_student`.
 
-## US-08 — Admin reporting · `admin-reporting`
+## US-08 — Admin reporting · `admin-reporting` ✅ built
 - **Goal:** program-wide KPIs, charts, needs-attention list, role management.
 - **Screens:** Admin Dashboard (+ a Users screen for role management).
 - **Data & rules:** KPIs (open requests, avg time-to-resolve, appointments booked, satisfaction
