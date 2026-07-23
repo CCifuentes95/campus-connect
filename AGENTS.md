@@ -149,6 +149,29 @@ Build the student spine first — it's a working vertical slice — then layer t
   `lib/advising.ts` `nowMs()` and `lib/notifications.ts` `nowMs()` are the pattern. Compute
   "now" once in the RSC and pass it down to client children as a prop so time-bucketing
   (e.g. Today/Earlier) can't drift between the server and client render.
+- **Client-triggered server actions without a form (US-07 board/detail):** the triage board's
+  row/panel controls call `(prev, formData)` actions **directly** from a client component via
+  `useTransition` (build a `FormData`, `await action({status:"idle"}, fd)`, then
+  `router.refresh()` on success) — NOT `useActionState`/`<form action>`. Use this when one
+  screen fires many different actions (claim/assign/resolve/…); keep `useActionState` for a
+  single form-bound mutation. `revalidatePath` in the action + `router.refresh()` re-renders the RSC.
+- **Kanban drag ≠ silent status set (the "named action captures input" principle holds under DnD):**
+  `components/staff/triage-kanban.tsx` maps a dnd-kit drop to a named action only for a permitted
+  `(from,to)`; input-free drops commit (claim / mark-resolved), an input-needing drop
+  (assigned→waiting) **opens the request-info composer** and commits on submit, invalid drops
+  snap back. Cards stay keyboard-openable (the body is a `Link`; a separate grip handle carries
+  the drag listeners) and every transition is also on the detail panel — so the board works
+  without dragging. Reduced-motion is the global `globals.css` rule.
+- **Staff→student notifications = one rules relaxation:** the `users/{uid}/notifications` create
+  rule is `isSelf(uid) || isStaff()` (was owner-only in US-06). A staff ticket action calls
+  `notifyStudent(db, {uid: ticket.studentId, …})` reusing `ticket_reply`/`ticket_update` (no new
+  enum values). Deploy the rule (`firebase deploy --only firestore`) or the write is silently
+  rejected (`notifyStudent` swallows). Verified end-to-end (advisor resolve → doc in student inbox).
+- **Staff board read = `orderBy` a single field only.** Staff read *all* tickets (`isStaff()`),
+  so `getTriageBoard` does `orderBy("updatedAt","desc") limit N` (automatic single-field index)
+  and computes KPIs/groups/filters/sort **in memory** — no composite index. The staff roster is
+  `users where role in ['advisor','admin']` (single-field). Staff labels (`staffStatusLabel`,
+  `staffCategoryLabel`) live beside the student maps in `lib/labels.ts`.
 
 **Firebase auth on Vercel (SSR):**
 - Server components read Firestore via **`FirebaseServerApp`** (`lib/firebase/server.ts`),
