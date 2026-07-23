@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { AdvisorSchedule } from "@/components/staff/advisor-schedule";
+import { FeatureUnavailable } from "@/components/feature-unavailable";
 import { nowMs } from "@/lib/advising";
 import { getAdvisorAppointments } from "@/lib/data/appointments";
+import { isEnabled } from "@/lib/flags";
 
 export const metadata: Metadata = {
   title: "My advising schedule · CampusConnect",
@@ -9,6 +11,14 @@ export const metadata: Metadata = {
 };
 
 export default async function AdvisorAppointmentsPage() {
+  if (!isEnabled("staff-triage")) {
+    return (
+      <FeatureUnavailable
+        title="The staff workspace is unavailable"
+        message="Staff features are temporarily turned off. Please check back later."
+      />
+    );
+  }
   const now = nowMs();
   const appts = await getAdvisorAppointments();
 

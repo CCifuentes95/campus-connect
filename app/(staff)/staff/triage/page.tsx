@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { TriageBoard } from "@/components/staff/triage-board";
+import { FeatureUnavailable } from "@/components/feature-unavailable";
 import { getSessionUser } from "@/lib/firebase/session";
 import { getStaffRoster } from "@/lib/data/staff";
 import { getTriageBoard } from "@/lib/data/staff-tickets";
+import { isEnabled } from "@/lib/flags";
 import { nowMs } from "@/lib/notifications";
 
 export const metadata: Metadata = {
@@ -11,6 +13,14 @@ export const metadata: Metadata = {
 };
 
 export default async function TriageBoardPage() {
+  if (!isEnabled("staff-triage")) {
+    return (
+      <FeatureUnavailable
+        title="The triage board is unavailable"
+        message="Staff triage is temporarily turned off. Please check back later."
+      />
+    );
+  }
   const now = nowMs();
   const [user, board, roster] = await Promise.all([
     getSessionUser(),

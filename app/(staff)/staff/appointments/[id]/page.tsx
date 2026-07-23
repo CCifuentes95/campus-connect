@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CompleteAppointmentButton } from "@/components/staff/complete-appointment-button";
 import { initialsOf } from "@/components/staff/glyphs";
+import { FeatureUnavailable } from "@/components/feature-unavailable";
 import { getStaffAppointment } from "@/lib/data/appointments";
 import { modeShort } from "@/lib/advising";
 import { clockTime, longDateTime } from "@/lib/format";
+import { isEnabled } from "@/lib/flags";
 import { appointmentStatusStyle, serviceLabel } from "@/lib/labels";
 
 export const metadata: Metadata = {
@@ -16,6 +18,14 @@ export default async function StaffAppointmentDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  if (!isEnabled("staff-triage")) {
+    return (
+      <FeatureUnavailable
+        title="The staff workspace is unavailable"
+        message="Staff features are temporarily turned off. Please check back later."
+      />
+    );
+  }
   const { id } = await params;
   const appt = await getStaffAppointment(id);
 

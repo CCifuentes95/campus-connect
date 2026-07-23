@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { getNotifications, getNotificationPrefs } from "@/lib/data/notifications";
 import { nowMs } from "@/lib/notifications";
 import { NotificationsTabs } from "@/components/notifications/notifications-tabs";
+import { FeatureUnavailable } from "@/components/feature-unavailable";
+import { isEnabled } from "@/lib/flags";
 
 export const metadata: Metadata = {
   title: "Notifications · CampusConnect",
@@ -9,6 +11,14 @@ export const metadata: Metadata = {
 };
 
 export default async function NotificationsPage() {
+  if (!isEnabled("notifications")) {
+    return (
+      <FeatureUnavailable
+        title="Notifications are unavailable"
+        message="The notifications inbox is temporarily turned off. Please check back later."
+      />
+    );
+  }
   const [result, prefs] = await Promise.all([getNotifications(), getNotificationPrefs()]);
   // Computed once, server-side, and passed down — the client tabs never call Date.now()
   // themselves, so Today/Earlier grouping can't drift between the server and client render.

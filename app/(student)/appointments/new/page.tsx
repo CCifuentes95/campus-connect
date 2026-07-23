@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BookingWizard } from "@/components/appointments/booking-wizard";
+import { FeatureUnavailable } from "@/components/feature-unavailable";
 import { nowMs, upcomingBusinessDays } from "@/lib/advising";
 import { getStudentAppointments } from "@/lib/data/appointments";
+import { isEnabled } from "@/lib/flags";
 
 export const metadata: Metadata = {
   title: "Book advising · CampusConnect",
@@ -10,6 +12,16 @@ export const metadata: Metadata = {
 };
 
 export default async function NewAppointmentPage() {
+  if (!isEnabled("book-appointment")) {
+    return (
+      <FeatureUnavailable
+        title="Booking is unavailable"
+        message="Advising appointment booking is temporarily turned off. Please check back later."
+        backHref="/appointments"
+        backLabel="Back to my appointments"
+      />
+    );
+  }
   const now = nowMs();
   const dateChips = upcomingBusinessDays(8, now);
 

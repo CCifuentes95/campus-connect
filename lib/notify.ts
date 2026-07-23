@@ -6,6 +6,7 @@
 // US-03 event-write convention). `firestore.rules` requires `read:false` and a closed `type`
 // enum matching NOTIFICATION_TYPES.
 import { addDoc, collection, type Firestore, serverTimestamp } from "firebase/firestore";
+import { isEnabled } from "@/lib/flags";
 import type { NotificationType } from "@/lib/notifications";
 
 export async function notifyStudent(params: {
@@ -17,6 +18,9 @@ export async function notifyStudent(params: {
   link: string;
   refId: string;
 }): Promise<void> {
+  // When notifications are flagged off, skip the write entirely so no orphan notifications
+  // accrue for a disabled feature (the inbox route + actions are gated separately).
+  if (!isEnabled("notifications")) return;
   const { db, uid, type, title, body, link, refId } = params;
   try {
     await addDoc(collection(db, "users", uid, "notifications"), {

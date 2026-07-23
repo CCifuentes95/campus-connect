@@ -28,6 +28,7 @@ import {
 } from "@/lib/advising";
 import { getStudentProfile } from "@/lib/data/student-dashboard";
 import { getFirestoreForUser } from "@/lib/firebase/firestore";
+import { isEnabled } from "@/lib/flags";
 import { clockTime, timelineStamp } from "@/lib/format";
 import { serviceLabel } from "@/lib/labels";
 import { notifyStudent } from "@/lib/notify";
@@ -97,6 +98,9 @@ export async function bookAppointment(
   _prev: BookState,
   formData: FormData,
 ): Promise<BookState> {
+  if (!isEnabled("book-appointment")) {
+    return { status: "error", message: "Booking is currently unavailable." };
+  }
   const parsed = BookSchema.safeParse({
     service: formData.get("service"),
     advisorId: formData.get("advisorId"),
@@ -182,6 +186,9 @@ export async function completeAppointment(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
+  if (!isEnabled("staff-triage")) {
+    return { status: "error", message: "Staff triage is currently unavailable." };
+  }
   const id = String(formData.get("id") ?? "");
   const { db, currentUser } = await getFirestoreForUser();
   if (!currentUser || !id) {

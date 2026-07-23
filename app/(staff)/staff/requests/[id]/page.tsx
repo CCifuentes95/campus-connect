@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { StaffTicketWorkspace } from "@/components/staff/staff-ticket-workspace";
 import { StatusGlyph, initialsOf } from "@/components/staff/glyphs";
+import { FeatureUnavailable } from "@/components/feature-unavailable";
 import { getSessionUser } from "@/lib/firebase/session";
 import { getStaffRoster } from "@/lib/data/staff";
 import { getStaffTicketDetail } from "@/lib/data/staff-tickets";
+import { isEnabled } from "@/lib/flags";
 import { longDateTime } from "@/lib/format";
 import { priorityStyle, staffCategoryLabel, staffStatusLabel } from "@/lib/labels";
 
@@ -17,6 +19,14 @@ export default async function StaffTicketDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  if (!isEnabled("staff-triage")) {
+    return (
+      <FeatureUnavailable
+        title="The triage board is unavailable"
+        message="Staff triage is temporarily turned off. Please check back later."
+      />
+    );
+  }
   const { id } = await params;
   const [result, user, roster] = await Promise.all([
     getStaffTicketDetail(id),
