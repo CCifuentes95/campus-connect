@@ -274,7 +274,7 @@ export function UserDetailForm({
           </h2>
           <p className="mb-5 text-[13.5px] leading-[1.6] text-body">
             This permanently removes the account and its sign-in credentials. Their past
-            requests stay in the system, attributed to a removed user. This can&apos;t be undone.
+            requests stay in the system, attributed to a removed user. This can’t be undone.
           </p>
           <div className="flex items-center justify-end gap-2.5">
             <button

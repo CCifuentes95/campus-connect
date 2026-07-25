@@ -191,8 +191,8 @@ export function UsersRoster({
       } else {
         setToast(
           state.status === "error"
-            ? (state.message ?? "Couldn't delete that account.")
-            : "Couldn't delete that account.",
+            ? (state.message ?? "Couldn’t delete that account.")
+            : "Couldn’t delete that account.",
         );
       }
     });
@@ -280,6 +280,9 @@ export function UsersRoster({
           </label>
           <input
             id="admin-user-search"
+            type="search"
+            autoComplete="off"
+            spellCheck={false}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search name, email or ID"
@@ -336,7 +339,7 @@ export function UsersRoster({
               {error ? (
                 <tr>
                   <td colSpan={5} className="px-4 py-12 text-center">
-                    <p className="text-[15px] font-semibold text-ink">Couldn&apos;t load the roster</p>
+                    <p className="text-[15px] font-semibold text-ink">Couldn’t load the roster</p>
                     <p className="mt-1 text-[13px] text-body">
                       Something went wrong reading accounts — refresh to try again.
                     </p>
@@ -493,7 +496,7 @@ export function UsersRoster({
           </h2>
           <p className="mb-5 text-[13.5px] leading-[1.6] text-body">
             This permanently removes the account and its sign-in credentials. Their past requests
-            stay in the system, attributed to a removed user. This can&apos;t be undone.
+            stay in the system, attributed to a removed user. This can’t be undone.
           </p>
           <div className="flex items-center justify-end gap-2.5">
             <button

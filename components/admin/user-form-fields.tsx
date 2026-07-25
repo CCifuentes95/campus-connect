@@ -6,6 +6,7 @@
 // Advisor and Staff are separate role cards but the SAME `advisor` claim; the difference is
 // carried by `staffType` and shown through `title`/`dept` (ADR-0007).
 
+import { useEffect, useRef } from "react";
 import {
   CATEGORIES,
   COHORTS,
@@ -121,8 +122,19 @@ export function UserFormFields({
   const emailError = firstError(fieldErrors, "email");
   const pwError = firstError(fieldErrors, "password");
 
+  // Move focus to the first invalid field after a failed submit, so a keyboard or screen
+  // reader user lands on the problem instead of hunting for red text.
+  // `disabled` is in the deps deliberately: while the submit is in flight every field is
+  // disabled, and focus() on a disabled element is a no-op — so the first attempt silently
+  // does nothing and we have to retry once the fields come back.
+  const formRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (disabled || !fieldErrors || Object.keys(fieldErrors).length === 0) return;
+    formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+  }, [fieldErrors, disabled]);
+
   return (
-    <div className="flex flex-col gap-5">
+    <div ref={formRef} className="flex flex-col gap-5">
       {/* ROLE */}
       <div>
         <span className="mb-[9px] block text-[12px] font-bold uppercase tracking-[0.5px] text-muted">
@@ -185,6 +197,7 @@ export function UserFormFields({
             onChange={(e) => onChange({ displayName: e.target.value })}
             placeholder="e.g. Amara Okafor"
             disabled={disabled}
+            autoComplete="off"
             aria-invalid={nameError ? true : undefined}
             className={`field ${nameError ? "field-error" : ""}`}
           />
@@ -202,6 +215,8 @@ export function UserFormFields({
             onChange={(e) => onChange({ email: e.target.value })}
             placeholder="name@ibu.edu"
             disabled={disabled}
+            autoComplete="off"
+            spellCheck={false}
             aria-invalid={emailError ? true : undefined}
             className={`field ${emailError ? "field-error" : ""}`}
           />
@@ -224,6 +239,11 @@ export function UserFormFields({
               onChange={(e) => onChange({ password: e.target.value })}
               placeholder={passwordPlaceholder}
               disabled={disabled}
+              // This is a password the admin is setting FOR SOMEONE ELSE. Without this the
+              // browser offers to save it as the admin's own credential — and after creating
+              // several accounts, to overwrite it.
+              autoComplete="new-password"
+              spellCheck={false}
               aria-invalid={pwError ? true : undefined}
               className={`field pr-[42px] ${pwError ? "field-error" : ""}`}
             />
@@ -274,6 +294,7 @@ export function UserFormFields({
                 onChange={(e) => onChange({ studentId: e.target.value })}
                 placeholder="Auto-generated if blank"
                 disabled={disabled}
+                autoComplete="off"
                 className="field"
               />
             </div>
@@ -322,6 +343,7 @@ export function UserFormFields({
                 onChange={(e) => onChange({ title: e.target.value })}
                 placeholder={titlePlaceholder(values.uiRole)}
                 disabled={disabled}
+                autoComplete="off"
                 className="field"
               />
             </div>

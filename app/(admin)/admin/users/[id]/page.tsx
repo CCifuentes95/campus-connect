@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { ArrowLeftGlyph, CheckGlyph } from "@/components/admin/glyphs";
 import { UserDetailForm } from "@/components/admin/user-detail-form";
 import { ACCESS_SUMMARY, UI_ROLE_LABEL } from "@/lib/admin-users";
@@ -9,10 +10,20 @@ import { getSessionUser } from "@/lib/firebase/session";
 import { joinedDate, relativeTime } from "@/lib/format";
 import { staffStatusLabel } from "@/lib/labels";
 
-export const metadata: Metadata = {
-  title: "User profile · CampusConnect",
-  description: "Edit a CampusConnect account's profile, role and access.",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  // getAdminUser is React-cached, so this shares the page's read rather than adding one.
+  const user = await getAdminUser((await params).id);
+  return {
+    title: user?.displayName
+      ? `${user.displayName} · People & access · CampusConnect`
+      : "User profile · CampusConnect",
+    description: "Edit a CampusConnect account's profile, role and access.",
+  };
+}
 
 /** Ticket status → the activity row's leading dot, matching the mockup's warn/teal/ok. */
 function statusDot(status: string): string {
@@ -62,9 +73,27 @@ export default async function AdminUserDetailPage({
           <div>
             <UserDetailForm user={user} isSelf={user.id === session.uid} />
           </div>
-          <Sidebar user={user} />
+          {/* The sidebar's activity read scans the ticket collection; streaming it keeps the
+              edit form — the reason you opened this page — from waiting on it. */}
+          <Suspense fallback={<SidebarSkeleton />}>
+            <Sidebar user={user} />
+          </Suspense>
         </div>
       )}
+    </div>
+  );
+}
+
+function SidebarSkeleton() {
+  return (
+    <div className="flex flex-col gap-[18px]" aria-hidden>
+      {[136, 210, 168].map((h) => (
+        <div
+          key={h}
+          style={{ height: h }}
+          className="rounded-2xl border border-line bg-card shadow-[0_1px_2px_var(--card-shadow)]"
+        />
+      ))}
     </div>
   );
 }
@@ -74,8 +103,8 @@ async function Sidebar({ user }: { user: Awaited<ReturnType<typeof getAdminUser>
   const isStudent = user.uiRole === "student";
   const activity = await getUserActivity(user.id, isStudent);
 
-  const meta: { label: string; value: string }[] = [
-    { label: "Account ID", value: user.id },
+  const meta: { label: string; value: string; noTranslate?: boolean }[] = [
+    { label: "Account ID", value: user.id, noTranslate: true },
     { label: "Joined", value: joinedDate(user.createdAtMs) },
     { label: "Role", value: UI_ROLE_LABEL[user.uiRole] },
     isStudent
@@ -91,7 +120,10 @@ async function Sidebar({ user }: { user: Awaited<ReturnType<typeof getAdminUser>
           {meta.map((m) => (
             <div key={m.label} className="flex items-center justify-between gap-3">
               <span className="text-[13px] text-muted">{m.label}</span>
-              <span className="min-w-0 truncate text-right text-[13px] font-semibold text-ink">
+              <span
+                className="min-w-0 truncate text-right text-[13px] font-semibold text-ink"
+                translate={m.noTranslate ? "no" : undefined}
+              >
                 {m.value}
               </span>
             </div>
