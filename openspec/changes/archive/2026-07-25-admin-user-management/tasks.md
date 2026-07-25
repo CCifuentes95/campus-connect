@@ -128,8 +128,8 @@
 ## 9. Ship
 
 - [x] 9.1 Open the PR with a thorough body and both-theme screenshots
-- [ ] 9.2 Merge, then verify the commits landed in `main` (`git merge-base --is-ancestor`)
-- [ ] 9.3 `/opsx:sync` the `admin-user-management` and `role-access` deltas into
+- [x] 9.2 Merge, then verify the commits landed in `main` (`git merge-base --is-ancestor`)
+- [x] 9.3 `/opsx:sync` the `admin-user-management` and `role-access` deltas into
       `openspec/specs/`, then `/opsx:archive`
 - [x] 9.4 Update `AGENTS.md` — Cloud Functions are now partly deployed; the deploy command is
       function-scoped on purpose; the `staffType` pattern; the callable-from-server-action
