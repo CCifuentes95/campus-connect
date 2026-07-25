@@ -126,7 +126,7 @@ export async function createUser(
     );
     if (!signedIn) return { status: "error", message: EXPIRED };
     revalidate();
-    return { status: "success", uid: result?.data.uid };
+    return { status: "success", uid: result?.uid };
   } catch (err) {
     console.error("[admin-users] createUser failed", err);
     return errorFromCallable(err);

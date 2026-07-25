@@ -73,17 +73,23 @@ exactly two deployed functions. Alternatives rejected: making it read-before-wri
 (extra code for an unused path, still racy on the profile-doc write); deleting it outright
 (touches US-01's shipped scope for no benefit).
 
-**Transport: server action → callable via `FirebaseServerApp`.**
+**Transport: server action → callable over HTTPS with the session cookie's ID token.**
 `lib/actions/admin-users.ts` follows the established `"use server"` + zod + discriminated
-`useActionState` result pattern, and invokes the callable through `getFunctions(serverApp)` /
-`httpsCallable`. The Firebase Functions SDK's `ContextProvider` resolves its auth token from
-the app's `auth-internal` provider (`ContextProvider.getAuthToken()` → `this.auth.getToken()`),
-which a `FirebaseServerApp` seeded with `authIdToken` populates — so `request.auth.token.role`
-is available inside the function. This keeps the "server actions over route handlers" and
-"Admin SDK never on Vercel" conventions intact. **Fallback if this doesn't hold at runtime**:
-call `httpsCallable` directly from the client component with the browser's signed-in Firebase
-app — the function's own admin check is the real authorization boundary either way, so this is
-a transport swap, not a security change.
+`useActionState` result pattern. It invokes the function by POSTing the callable protocol
+(`{data: …}` + `Authorization: Bearer <idToken>`) to
+`https://us-central1-<project>.cloudfunctions.net/adminManageUser`, reading the ID token from
+the same `__session` cookie that seeds `FirebaseServerApp`. That is exactly what the client SDK
+sends on the wire, so `request.auth.token.role` populates and the admin gate works.
+
+**This replaces the original plan** — `getFunctions(serverApp)` + `httpsCallable` — which was
+tried first against the deployed function and **fails intermittently**. The Functions SDK's
+`ContextProvider` does `this.auth = authProvider.getImmediate({optional: true})` and, when that
+returns null (as it does under a `FirebaseServerApp`), fills `this.auth` from an **async**
+`authProvider.get().then(...)`. The token is therefore attached only if that promise happens to
+resolve before `getAuthToken()` runs: most calls threw `unauthenticated`, an occasional one
+succeeded. Intermittent auth failure is worse than none, so the transport is now explicit.
+The Admin SDK still never runs on Vercel (ADR-0004) — this is the signed-in user's own token,
+and the function re-checks the claim.
 
 **New profile fields are additive, and the self-update rule becomes an allowlist.**
 `staffType`, `dept`, `cohort`, `studentId`, `cats`, `bookable` join `users/{uid}`. The original
@@ -132,9 +138,10 @@ delete via a `disabled` flag — nothing in the app reads such a flag today.
 - **First deployed Cloud Function in this MVP** → needs Blaze billing enabled and a new deploy
   step (CI is web-only today; Functions deploy stays manual like rules). Mitigation: exactly
   two functions deployed; ADR records the departure.
-- **Callable auth over `FirebaseServerApp` is unverified at runtime** → if `request.auth` comes
-  back undefined, the server action gets `permission-denied`. Mitigation: verify early
-  (task 3.7) and fall back to a client-side `httpsCallable`, which is a transport-only change.
+- **Callable auth over `FirebaseServerApp` proved unreliable** (resolved) → `httpsCallable`
+  attached the ID token only when an async provider fetch won a race, so calls failed
+  intermittently with `unauthenticated`. Replaced with an explicit bearer-token POST of the
+  callable protocol; verified across create/update/delete against the deployed function.
 - **Hard delete is irreversible** and can orphan an in-flight advisor. Mitigation: self-delete
   guard in the function; the confirm modal reuses the mockup's explicit warning copy.
 - **Claim change is not instant** — takes effect on the target's next token refresh, same as
@@ -162,5 +169,6 @@ with `firebase functions:delete adminManageUser`.
 
 ## Open Questions
 
-None blocking — the four that were open (Advisor/Staff modeling, `onUserCreate` handling,
-category vocabulary, last-active) are resolved above.
+None. The four decisions that were open (Advisor/Staff modeling, `onUserCreate` handling,
+category vocabulary, last-active) are settled above, and the transport question was resolved
+empirically against the deployed function.

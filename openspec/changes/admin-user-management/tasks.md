@@ -3,7 +3,7 @@
 - [x] 1.1 Re-pull `Users.dc.html` and `User Detail.dc.html` via DesignSync; confirm the
       mockups' `:root`/`.cc-dark` token values already exist in `app/globals.css`, port any new
       ones verbatim
-- [ ] 1.2 Confirm the Blaze plan is enabled on the Firebase project (manual console step) —
+- [x] 1.2 Confirm the Blaze plan is enabled on the Firebase project (manual console step) —
       blocks every functions-deploy task below
 - [x] 1.3 Write the ADR for deploying Cloud Functions in this MVP (Context → Decision →
       Consequences → Alternatives): why `adminManageUser` + `setRole` deploy but `onUserCreate`
@@ -41,11 +41,11 @@
 - [x] 3.6 zod-validate every payload inside the function before any write; enforce the
       8-character minimum password and reject a duplicate email with a distinguishable error
       code the UI can map to a field error
-- [ ] 3.7 **Verify callable auth over `FirebaseServerApp` early** — confirm `request.auth.token
-      .role` is populated when invoked from a server action via `getFunctions(serverApp)`. If
-      not, switch the transport to a client-side `httpsCallable` (design.md records this
-      fallback) before building the UI on top of it
-- [ ] 3.8 Deploy exactly two functions:
+- [x] 3.7 **Verify callable auth over `FirebaseServerApp`** — it FAILED (intermittently:
+      `getImmediate` returns null under a server app and the async provider fill races
+      `getAuthToken`). Transport switched to an explicit bearer-token POST of the callable
+      protocol from the server action; kept out of the client. design.md updated
+- [x] 3.8 Deploy exactly two functions:
       `firebase deploy --only functions:adminManageUser,functions:setRole` — **not**
       `--only functions`, which would also deploy `onUserCreate`
 - [x] 3.9 Confirm in the Firebase console that `onUserCreate` is not deployed
@@ -114,16 +114,16 @@
       decorative icons, the password toggle's `aria-label`, the bookable `role="switch"` +
       `aria-checked`, keyboard tab order through chips and role cards, `line-clamp`/`min-w-0`,
       reduced motion
-- [ ] 8.3 End-to-end against the real Firebase project: create a Student, an Advisor, and a
+- [x] 8.3 End-to-end against the real Firebase project: create a Student, an Advisor, and a
       Staff account; verify each one's claim, `role` mirror, and `staffType`; sign in as the
       new advisor and confirm staff-route access
-- [ ] 8.4 Verify rejection paths: non-admin calling `adminManageUser`, self-delete, duplicate
+- [x] 8.4 Verify rejection paths: non-admin calling `adminManageUser`, self-delete, duplicate
       email, sub-8-character password
 - [x] 8.5 Verify a student cannot self-write `staffType`/`cats`/`bookable` to their own profile
       after the rules deploy
-- [ ] 8.6 Delete a test account that appears on an existing ticket or appointment; confirm the
+- [x] 8.6 Delete a test account that appears on an existing ticket or appointment; confirm the
       denormalized name still renders
-- [ ] 8.7 Clean up all test accounts created during verification
+- [x] 8.7 Clean up all test accounts created during verification
 
 ## 9. Ship
 
