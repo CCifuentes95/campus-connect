@@ -127,11 +127,11 @@
 
 ## 9. Ship
 
-- [ ] 9.1 Open the PR with a thorough body and both-theme screenshots
+- [x] 9.1 Open the PR with a thorough body and both-theme screenshots
 - [ ] 9.2 Merge, then verify the commits landed in `main` (`git merge-base --is-ancestor`)
 - [ ] 9.3 `/opsx:sync` the `admin-user-management` and `role-access` deltas into
       `openspec/specs/`, then `/opsx:archive`
-- [ ] 9.4 Update `AGENTS.md` — Cloud Functions are now partly deployed; the deploy command is
+- [x] 9.4 Update `AGENTS.md` — Cloud Functions are now partly deployed; the deploy command is
       function-scoped on purpose; the `staffType` pattern; the callable-from-server-action
       transport
-- [ ] 9.5 Document learnings to memory and the Obsidian vault
+- [x] 9.5 Document learnings to memory and the Obsidian vault
