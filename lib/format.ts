@@ -37,6 +37,13 @@ export function timelineStamp(ms: number): string {
   return `${shortDate(ms)}, ${clockTime(ms)}`;
 }
 
+/** "02 Aug 2023" — the admin roster's Joined column and detail meta (mockup's `created`). */
+export function joinedDate(ms: number | null): string {
+  if (!ms) return "—";
+  const d = new Date(ms);
+  return `${String(d.getDate()).padStart(2, "0")} ${MONTHS_SHORT[d.getMonth()]} ${d.getFullYear()}`;
+}
+
 /** "Jul 18, 2026 · 9:12 AM" — the sidebar "Created" row. */
 export function longDateTime(ms: number): string {
   const d = new Date(ms);

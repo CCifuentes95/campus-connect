@@ -104,6 +104,8 @@
   --chart-lite: #8fb0cc;
   --grid: #e2e8ef; /* chart gridlines */
   --chart-track: #eef2f6; /* unfilled bar / donut track */
+  /* admin user management — modal backdrop (verbatim from Users / User Detail mockups) */
+  --scrim: rgba(13, 44, 73, 0.42);
 }
 
 :root[data-theme="dark"] {
@@ -197,6 +199,8 @@
   --chart-lite: #3d5f80;
   --grid: #24405c;
   --chart-track: #17324c;
+  /* admin user management (dark) */
+  --scrim: rgba(2, 10, 18, 0.65);
 }
 
 /* Map roles to Tailwind color utilities via var() so bg-page / text-ink / … flip by theme. */
@@ -247,6 +251,7 @@
   --color-unread-bg: var(--unread-bg);
   --color-toggle-on: var(--toggle-on);
   --color-toggle-off: var(--toggle-off);
+  --color-scrim: var(--scrim);
   --font-sans: var(--font-poppins);
 }
 

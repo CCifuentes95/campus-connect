@@ -35,13 +35,24 @@ service cloud.firestore {
       // a user reads their own profile; staff read anyone (for names/queues)
       allow read: if isSelf(uid) || isStaff();
 
-      // profiles are created by the onUserCreate Cloud Function (admin SDK bypasses
-      // rules), so no client create. A user may edit their own display/pref fields
-      // but never their own role (role is a claim, mirror is display-only).
+      // profiles are created and deleted by the adminManageUser Cloud Function (admin SDK
+      // bypasses rules), so no client create/delete. A user may edit their own display/pref
+      // fields but never their own role (role is a claim, mirror is display-only) nor any
+      // admin-managed field.
+      //
+      // ALLOWLIST, not a denylist (changed in ADR-0007). `notificationPrefs` is the only
+      // field the client ever writes here (lib/actions/notifications.ts). Everything else —
+      // role, staffType, dept, cohort, studentId, cats, bookable, … — is admin-managed and
+      // written only by adminManageUser via the Admin SDK, which bypasses rules.
+      //
+      // Why not `unchanged(field)` per field: that expands to
+      // `request.resource.data[field] == resource.data[field]`, which ERRORS (and so denies)
+      // when the field is absent. staffType/dept/cats/... don't exist on student docs, so a
+      // denylist would have blocked students from saving notification preferences.
+      // An allowlist also needs no maintenance when new admin-managed fields are added.
       allow update: if isSelf(uid)
-                    && unchanged('role')
-                    && unchanged('uid')
-                    && unchanged('email');
+                    && request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(['notificationPrefs']);
       allow create, delete: if false;
 
       // notifications feed — owner reads; owner OR staff creates (no Cloud Functions are
