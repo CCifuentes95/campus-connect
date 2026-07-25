@@ -16,10 +16,15 @@ Identity is Firebase Auth. Authorization is a single custom claim:
 
     role: "student" | "advisor" | "admin"
 
-- **onUserCreate** Cloud Function sets `role: "student"` on every new account and creates
-  the `users/{uid}` profile doc.
+- **adminManageUser** admin-only callable Cloud Function creates, updates, and hard-deletes
+  accounts. It owns the Auth account, the claim, and the `users/{uid}` profile doc. This is
+  how accounts are created — there is no self-signup. See ADR-0007.
 - **setRole** admin-only callable Cloud Function promotes a user to `advisor` or `admin`
   (and can demote). It writes the claim and mirrors `role` onto the profile doc for display.
+- **onUserCreate** exists in `functions/src/index.ts` but is **deliberately not deployed**: it
+  hard-sets `role: "student"` on every new Auth account, which would clobber the claim
+  `adminManageUser` assigns. An account with no claim already resolves to `student` in-app.
+  Deploy functions **by name**, never `--only functions` (ADR-0007).
 - Claims are read from the ID token in rules via `request.auth.token.role` — **no document
   read**. A client sees a new role only after a token refresh: force with `getIdToken(true)`.
 - `isStaff()` in rules = `role in ["advisor", "admin"]`. `advisor` and `admin` are one
@@ -42,8 +47,14 @@ One doc per account, id = Auth uid.
 | `displayName` | string | e.g. "Amara Okafor" |
 | `initials` | string | e.g. "AO" — precomputed for avatars |
 | `role` | string | display mirror of the claim; **not** authoritative |
+| `staffType` | string | `advisor` \| `staff` — display-only split of the shared `advisor` claim (staff only); see ADR-0007 |
 | `program` | string | student's program, e.g. "MSc International Business" (student only) |
+| `cohort` | string | e.g. "2026 Autumn" (student only) |
+| `studentId` | string | e.g. "S-20418" — auto-generated when left blank (student only) |
 | `title` | string | staff role label, e.g. "Academic Advisor" (staff only) |
+| `dept` | string | `Advising` \| `Records & Finance` \| `IT Support` \| `Careers` \| `Program office` (staff only) |
+| `cats` | string[] | request categories they handle: `Advising` \| `Academic` \| `Records` \| `Finance` \| `IT Support` \| `Career` (staff only). **Deliberately not the ticket `category` enum** — descriptive only, drives no filtering (ADR-0007) |
+| `bookable` | boolean | publishes an advising calendar (advisor only; always false otherwise). Descriptive only — advising availability still comes from the static config |
 | `createdAt` | timestamp | server timestamp |
 | `notificationPrefs` | map | per-channel/per-event opt-in, e.g. `{ email: true, push: true, ticketUpdates: true, appointmentReminders: true }` |
 

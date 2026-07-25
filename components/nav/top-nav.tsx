@@ -24,10 +24,11 @@ const NAV: Record<Role, { subtitle: string; links: NavLink[] }> = {
   admin: {
     subtitle: "Admin · Program office",
     links: [
-      // Role management (Users) is deferred — custom claims need the Admin SDK / a callable
-      // Cloud Function, neither available on Vercel in this MVP (ADR-0004). Use the setRole CLI.
       { label: "Reports", href: "/admin/reports" },
       { label: "Triage board", href: "/staff/triage" },
+      // Role management runs through the adminManageUser callable Cloud Function — the web
+      // tier still never holds the Admin SDK (ADR-0004 / ADR-0007).
+      { label: "Users", href: "/admin/users" },
     ],
   },
 };

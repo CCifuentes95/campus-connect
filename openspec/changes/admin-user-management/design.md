@@ -85,13 +85,19 @@ call `httpsCallable` directly from the client component with the browser's signe
 app — the function's own admin check is the real authorization boundary either way, so this is
 a transport swap, not a security change.
 
-**New profile fields are additive, and each must be added to the rules denylist.**
-`staffType`, `dept`, `cohort`, `studentId`, `cats`, `bookable` join `users/{uid}`. Because the
-self-update rule is `unchanged(...)`-based, omitting them would let a student self-assign
-`staffType: 'staff'` or `cats` on their own doc. Harmless for *authorization* (rules read the
-claim, never the profile), but it would corrupt the admin roster's display, so the rule gains
-`unchanged()` clauses for all six. The Cloud Function writes them via the Admin SDK, which
-bypasses rules entirely.
+**New profile fields are additive, and the self-update rule becomes an allowlist.**
+`staffType`, `dept`, `cohort`, `studentId`, `cats`, `bookable` join `users/{uid}`. The original
+plan was to add each to the existing `unchanged(...)` denylist — **that would have been a bug**:
+`unchanged(field)` expands to `request.resource.data[field] == resource.data[field]`, which
+errors (and therefore denies) when the field is absent, and none of these fields exist on
+student profiles. Students would have been locked out of saving notification preferences.
+
+Instead the rule becomes an allowlist —
+`request.resource.data.diff(resource.data).affectedKeys().hasOnly(['notificationPrefs'])` —
+matching the pattern already used by the `notifications` subcollection rule in the same file.
+`notificationPrefs` is verifiably the only field the client ever writes to `users/{uid}`
+(`lib/actions/notifications.ts`). This also needs no maintenance as future admin-managed fields
+are added. The Cloud Function writes everything else via the Admin SDK, bypassing rules.
 
 **Category vocabulary is the mockup's six labels verbatim.**
 `['Advising','Academic','Records','Finance','IT Support','Career']` — stored as-is, not mapped

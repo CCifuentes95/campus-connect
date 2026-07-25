@@ -181,14 +181,21 @@ delete their own account.
 ### Requirement: New profile fields are not client-writable
 
 The fields `staffType`, `dept`, `cohort`, `studentId`, `cats`, and `bookable` SHALL be writable
-only by the Admin SDK context inside `adminManageUser`. `firestore.rules` SHALL add each to the
-`users/{uid}` self-update `unchanged()` denylist so a signed-in user cannot alter them on their
-own profile document.
+only by the Admin SDK context inside `adminManageUser`. The `users/{uid}` self-update rule
+SHALL be an **allowlist** restricting client writes to `notificationPrefs` only, rather than a
+per-field `unchanged()` denylist — `unchanged(field)` errors and denies when the field is
+absent, and these fields do not exist on student profiles.
 
 #### Scenario: User cannot self-assign staffType
 - **WHEN** a signed-in student attempts to write `staffType` or `cats` to their own
   `users/{uid}` document from the client
 - **THEN** the write is rejected by `firestore.rules`
+
+#### Scenario: Saving notification preferences still works
+- **WHEN** a student saves their notification preferences, on a profile document that has none
+  of the new admin-managed fields
+- **THEN** the write succeeds, because the rule allowlists `notificationPrefs` rather than
+  comparing absent fields
 
 #### Scenario: The Cloud Function can write them
 - **WHEN** `adminManageUser` writes these fields via the Admin SDK
