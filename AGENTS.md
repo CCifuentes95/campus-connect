@@ -276,6 +276,38 @@ the `ui-quality-baseline` change). Carry these as explicit tasks in every UI sto
 Rule of thumb: the mockup encodes what it should *look* like (steps 1–3); `web-design-guidelines`
 encodes whether it's *accessible* (step 4). Both are required — they catch different classes of bug.
 
+**Cloud Functions ARE now deployed (partly) — ADR-0007, admin-user-management:**
+- The project is on **Blaze**, and exactly **two** functions are live: `adminManageUser` and
+  `setRole` (both `onCall`, us-central1). An artifact cleanup policy (3 days) is set.
+- **DEPLOY BY NAME. Never `firebase deploy --only functions`:**
+  `firebase deploy --only functions:adminManageUser,functions:setRole`. `onUserCreate` is still
+  in `functions/src/index.ts` and must stay **undeployed** — it hard-sets `role:"student"` on
+  every new Auth account, so deploying it clobbers the claim `adminManageUser` just assigned.
+  The symptom is nasty: "the advisor I created is a student." There is no self-signup, so
+  nothing needs the trigger.
+- **Calling a callable from a server action: do NOT use `getFunctions(serverApp)` +
+  `httpsCallable`.** It attaches the ID token only *sometimes*. The SDK's `ContextProvider`
+  does `getImmediate({optional:true})` (null under a `FirebaseServerApp`) then fills `auth`
+  from an **async** `.get()`; if `getAuthToken()` runs first the call reaches the function with
+  `request.auth` undefined → `unauthenticated`. Intermittent, so it looks like a flaky network.
+  Instead POST the callable protocol yourself — `lib/firebase/functions.ts` `callAsUser()`:
+  `{data}` body + `Authorization: Bearer <__session cookie ID token>`. Admin SDK still never
+  runs on Vercel (ADR-0004).
+- **Four UI roles, three claims.** Advisor and Staff are both the `advisor` claim, split by a
+  display-only `users/{uid}.staffType`. `isStaff()`, `lib/roles.ts`, and the nav map are
+  untouched. The four-way split is presentational — never an access boundary.
+
+**Two Firestore traps this change hit (both silent):**
+- **`orderBy(field)` DROPS documents that lack `field`.** `getAdminUsers` ordered by
+  `createdAt` and showed 2 of 6 accounts — on the screen whose whole job is listing every
+  account. If you sort in memory anyway (the roster does), don't `orderBy` at all.
+- **`unchanged(field)` ERRORS — and therefore denies — when the field is absent.** It expands
+  to `request.resource.data[field] == resource.data[field]`. Adding new admin-managed fields to
+  the `users/{uid}` denylist would have blocked every student from saving notification
+  preferences, since those fields don't exist on student docs. The rule is now an **allowlist**
+  (`diff(resource.data).affectedKeys().hasOnly(['notificationPrefs'])`), which also needs no
+  maintenance as fields are added. Prefer allowlists for per-document field guards.
+
 **Testing:**
 - If the Chrome extension isn't connected, drive the real app with **headless Playwright**.
 - The Identity Toolkit REST endpoint `accounts:signInWithPassword?key=<webApiKey>` tests auth
