@@ -47,12 +47,12 @@ export const getAdminUsers = cache(async (): Promise<LoadResult<AdminUser>> => {
   if (!currentUser) return { items: [], error: false };
 
   try {
+    // NO orderBy: Firestore drops documents that lack the ordered field, so
+    // `orderBy("createdAt")` would silently hide every account created before that field
+    // existed — accounts invisible on the People & access screen. Sorting happens in memory
+    // anyway (the table is sortable by four columns), so the server order is irrelevant.
     const snap = await getDocs(
-      query(
-        collection(db as Firestore, "users"),
-        orderBy("createdAt", "desc"),
-        limit(ROSTER_LIMIT),
-      ),
+      query(collection(db as Firestore, "users"), limit(ROSTER_LIMIT)),
     );
     return {
       items: snap.docs.map((d) => toRow(d.id, d.data() as Record<string, unknown>)),

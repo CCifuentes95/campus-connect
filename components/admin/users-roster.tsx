@@ -33,6 +33,7 @@ import {
   TrashGlyph,
   type RoleIcon,
 } from "./glyphs";
+import { Modal } from "./modal";
 import { emptyForm, UserFormFields, type UserFormValues } from "./user-form-fields";
 
 const IDLE: AdminUserState = { status: "idle" };
@@ -513,38 +514,6 @@ export function UsersRoster({
           </div>
         </Modal>
       ) : null}
-    </div>
-  );
-}
-
-function Modal({
-  children,
-  labelledBy,
-  onClose,
-  narrow,
-}: {
-  children: React.ReactNode;
-  labelledBy: string;
-  onClose: () => void;
-  narrow?: boolean;
-}) {
-  return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={labelledBy}
-      className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto bg-scrim p-6"
-      onKeyDown={(e) => {
-        if (e.key === "Escape") onClose();
-      }}
-    >
-      <div
-        className={`my-auto w-full rounded-2xl border border-line bg-card p-[26px] shadow-[0_24px_60px_rgba(3,14,26,0.35)] ${
-          narrow ? "max-w-[430px]" : "max-w-[640px]"
-        }`}
-      >
-        {children}
-      </div>
     </div>
   );
 }

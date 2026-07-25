@@ -15,6 +15,7 @@ import {
   UI_ROLE_PILL,
 } from "@/lib/admin-users";
 import { DangerGlyph, SaveGlyph, TrashGlyph } from "./glyphs";
+import { Modal } from "./modal";
 import { UserFormFields, type UserFormValues } from "./user-form-fields";
 
 const IDLE: AdminUserState = { status: "idle" };
@@ -264,46 +265,35 @@ export function UserDetailForm({
       </div>
 
       {deleteOpen ? (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="delete-user-heading"
-          className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto bg-scrim p-6"
-          onKeyDown={(e) => {
-            if (e.key === "Escape") setDeleteOpen(false);
-          }}
-        >
-          <div className="my-auto w-full max-w-[430px] rounded-2xl border border-line bg-card p-[26px] shadow-[0_24px_60px_rgba(3,14,26,0.35)]">
-            <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--err-bg)] text-err">
-              <DangerGlyph />
-            </div>
-            <h2 id="delete-user-heading" className="mb-2 text-[18px] font-bold text-ink">
-              Delete {saved.displayName}?
-            </h2>
-            <p className="mb-5 text-[13.5px] leading-[1.6] text-body">
-              This permanently removes the account and its sign-in credentials. Their past
-              requests stay in the system, attributed to a removed user. This can&apos;t be
-              undone.
-            </p>
-            <div className="flex items-center justify-end gap-2.5">
-              <button
-                type="button"
-                onClick={() => setDeleteOpen(false)}
-                className="rounded-[10px] border border-field px-4 py-2.5 text-[13.5px] font-semibold text-ink hover:border-muted"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={pending}
-                onClick={confirmDelete}
-                className="rounded-[10px] bg-err px-[17px] py-[11px] text-[13.5px] font-bold text-white hover:opacity-90 disabled:opacity-60"
-              >
-                {pending ? "Deleting…" : "Delete permanently"}
-              </button>
-            </div>
+        <Modal labelledBy="delete-user-heading" onClose={() => setDeleteOpen(false)} narrow>
+          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--err-bg)] text-err">
+            <DangerGlyph />
           </div>
-        </div>
+          <h2 id="delete-user-heading" className="mb-2 text-[18px] font-bold text-ink">
+            Delete {saved.displayName}?
+          </h2>
+          <p className="mb-5 text-[13.5px] leading-[1.6] text-body">
+            This permanently removes the account and its sign-in credentials. Their past
+            requests stay in the system, attributed to a removed user. This can&apos;t be undone.
+          </p>
+          <div className="flex items-center justify-end gap-2.5">
+            <button
+              type="button"
+              onClick={() => setDeleteOpen(false)}
+              className="rounded-[10px] border border-field px-4 py-2.5 text-[13.5px] font-semibold text-ink hover:border-muted"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={confirmDelete}
+              className="rounded-[10px] bg-err px-[17px] py-[11px] text-[13.5px] font-bold text-white hover:opacity-90 disabled:opacity-60"
+            >
+              {pending ? "Deleting…" : "Delete permanently"}
+            </button>
+          </div>
+        </Modal>
       ) : null}
     </>
   );

@@ -104,9 +104,13 @@
 
 ## 8. Verification
 
-- [ ] 8.1 Screenshot `/admin/users` and `/admin/users/[id]` in **both light and dark** with
+> Pre-existing, out of scope: `TopNav` overflows the viewport below ~420px for EVERY role
+> (student dashboard 669px @380px vs. these admin pages' 606px). The mockups have a
+> `cc-nav-toggle` hamburger at <=1080px that the app never implemented. Not introduced here.
+
+- [x] 8.1 Screenshot `/admin/users` and `/admin/users/[id]` in **both light and dark** with
       headless Playwright from the scratchpad; diff region-by-region against the two mockups
-- [ ] 8.2 `web-design-guidelines` review in both themes — `:focus-visible`, `aria-hidden` on
+- [x] 8.2 `web-design-guidelines` review in both themes — `:focus-visible`, `aria-hidden` on
       decorative icons, the password toggle's `aria-label`, the bookable `role="switch"` +
       `aria-checked`, keyboard tab order through chips and role cards, `line-clamp`/`min-w-0`,
       reduced motion
@@ -115,7 +119,7 @@
       new advisor and confirm staff-route access
 - [ ] 8.4 Verify rejection paths: non-admin calling `adminManageUser`, self-delete, duplicate
       email, sub-8-character password
-- [ ] 8.5 Verify a student cannot self-write `staffType`/`cats`/`bookable` to their own profile
+- [x] 8.5 Verify a student cannot self-write `staffType`/`cats`/`bookable` to their own profile
       after the rules deploy
 - [ ] 8.6 Delete a test account that appears on an existing ticket or appointment; confirm the
       denormalized name still renders
